@@ -71,7 +71,6 @@
         "npm install"
       ],
       "after:bump": "npm run build",
-      "after:git:release": "bin/*",
       "after:release": [
         "echo Successfully released ${name} v${version} to ${repo.repository}.",
         "rm -r bin/"
@@ -108,7 +107,12 @@
       "releaseName": "v${version}",
       "tokenRef": "GITHUB_TOKEN",
       "origin": null,
-      "skipChecks": false
+      "skipChecks": false,
+      "assets": [
+        "bin/geofeed-finder-linux-x64",
+        "bin/geofeed-finder-macos-x64",
+        "bin/geofeed-finder-win-x64"
+      ]
     }
   }
 }
