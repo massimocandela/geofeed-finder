@@ -111,7 +111,7 @@
       "assets": [
         "bin/geofeed-finder-linux-x64",
         "bin/geofeed-finder-macos-x64",
-        "bin/geofeed-finder-win-x64"
+        "bin/geofeed-finder-win-x64.exe"
       ]
     }
   }
