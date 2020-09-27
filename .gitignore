@@ -1,0 +1,10 @@
+.idea/
+node_modules/
+bin/
+build/
+logs/
+.DS_Store
+.npmrc
+.cache/
+result.csv
+.env
