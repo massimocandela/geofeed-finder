@@ -68,12 +68,13 @@
   "release-it": {
     "hooks": {
       "before:init": [
-        "npm install",
-        "npm run build"
+        "npm install"
       ],
       "after:bump": "npm run build",
+      "after:git:release": "bin/*",
       "after:release": [
-        "echo Successfully released ${name} v${version} to ${repo.repository}."
+        "echo Successfully released ${name} v${version} to ${repo.repository}.",
+        "rm -r bin/"
       ]
     },
     "git": {
