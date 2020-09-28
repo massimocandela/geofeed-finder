@@ -2,7 +2,7 @@
 
 This utility discovers and retrieves geofeed files from whois data according to [draft-ymbk-opsawg-finding-geofeeds](https://datatracker.ietf.org/doc/draft-ymbk-opsawg-finding-geofeeds/).
 
-To use the compiled version, see [releases](https://github.com/massimocandela/geofeed-finder/releases/). 
+> To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/).
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
