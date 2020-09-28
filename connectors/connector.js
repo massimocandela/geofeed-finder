@@ -15,7 +15,7 @@ export default class Connector {
     }
 
     getCachedBlocks = (file) => {
-        const fileName = this.cacheDir + "ripe-cache-" + md5(file);
+        const fileName = this.cacheDir + this.connectorName + "-" + md5(file);
 
         if (fs.existsSync(fileName)) {
             const content = JSON.parse(fs.readFileSync(fileName, 'utf8'));
