@@ -6,9 +6,6 @@ const cidrToRange = (cidr) => {
         const af = ipUtils.getAddressFamily(cidr);
         const addr = (af === 4) ? new v4(cidr) : new v6(cidr);
 
-        if (af == 6) {
-            console.log([addr.startAddress().address, addr.endAddress().address]);
-        }
         return [addr.startAddress().address, addr.endAddress().address];
     }
 };

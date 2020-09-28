@@ -10,6 +10,7 @@ export default class ConnectorRIPE extends Connector{
     constructor(params) {
         super(params)
 
+        this.connectorName = "ripe";
         this.dumpUrl = this.params.dumpUrl || "ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz";
         this.cacheFile = [this.cacheDir, "ripe.db.gz"].join("/").replace("//", "/");
         this.daysWhoisCache = 7;
@@ -116,10 +117,6 @@ export default class ConnectorRIPE extends Connector{
         }
     }
 
-    _getCachedBlocks = () => {
-
-    };
-
     getBlocks = () => {
 
         return this._getDump()
@@ -133,6 +130,5 @@ export default class ConnectorRIPE extends Connector{
                             });
                     });
             });
-            // .then(console.log)
     }
 }
