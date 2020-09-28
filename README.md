@@ -6,4 +6,6 @@ This utility discovers and retrieves geofeed files from whois data according to 
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
-The utility automatically manages the cache according to what described in the draft (so you can just run it how many times you like).
+The utility automatically manages the cache (so you can just run it how many times you like).
+
+This is a *prototype* temporarily working only with RIPE data.

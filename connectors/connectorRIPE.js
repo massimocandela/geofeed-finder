@@ -4,7 +4,7 @@ import fs from "fs";
 import moment from "moment";
 import zlib from "zlib";
 import readline from "readline";
-import ipRangeToCidr from "../iprangeToCidr";
+import ipUtils from "ip-sub";
 
 export default class ConnectorRIPE extends Connector{
     constructor(params) {
@@ -27,7 +27,7 @@ export default class ConnectorRIPE extends Connector{
         } else {
             if (inetnum.includes("-")) {
                 const range = inetnum.replace("inetnum:", "").split("-").map(i => i.trim());
-                return ipRangeToCidr(...range);
+                return ipUtils.ipRangeToCidr(...range);
             } else {
                 return inetnum.replace("inetnum:", "").trim();
             }
