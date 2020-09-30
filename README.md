@@ -9,7 +9,7 @@ Otherwise, you can just download the code and do `npm install` and `npm run serv
 The utility automatically manages the cache (so you can just run it how many times you like).
 This is a *prototype* temporarily working only with RIPE data.
 
-# Usage Example
+## Usage Example
 
 * Run the binary `./geofeed-finder-linux-x64`
 * See the final geofeed file in `result.csv`
