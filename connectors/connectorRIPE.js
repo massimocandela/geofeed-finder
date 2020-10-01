@@ -6,7 +6,7 @@ import zlib from "zlib";
 import readline from "readline";
 import ipUtils from "ip-sub";
 
-export default class ConnectorRIPE extends Connector{
+export default class ConnectorRIPE extends Connector {
     constructor(params) {
         super(params)
 
