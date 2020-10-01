@@ -1,4 +1,5 @@
 import ConnectorRIPE from "./connectors/connectorRIPE";
+import connectorAFRINIC from "./connectors/connectorAFRINIC";
 import batchPromises from "batch-promises";
 import axios from "axios";
 import CsvParser from "./csvParser";
@@ -13,7 +14,8 @@ export default class Finder {
         this.csvParser = new CsvParser();
 
         this.connectors = [
-            new ConnectorRIPE(this.params)
+            new ConnectorRIPE(this.params),
+            new connectorAFRINIC(this.params),
         ];
 
     };
