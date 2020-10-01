@@ -1,7 +1,5 @@
 import md5 from "md5";
 import fs from "fs";
-import moment from "moment";
-
 
 export default class Connector {
     constructor(params) {
@@ -13,6 +11,12 @@ export default class Connector {
     getBlocks = () => {
         return Promise.reject("Missing implementation");
     }
+
+    getCacheFileName = (originalName) => {
+        return [this.cacheDir, md5(originalName)]
+            .join("/")
+            .replace("//", "/");
+    };
 
     getCachedBlocks = (file) => {
         const fileName = this.cacheDir + this.connectorName + "-" + md5(file);
