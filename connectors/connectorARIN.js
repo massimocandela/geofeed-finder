@@ -167,6 +167,11 @@ export default class ConnectorARIN extends Connector {
     };
 
     getBlocks = () => {
-        return this._createWhoisDump();
+        if (this.params.arinBulk) {
+            console.log("ARIN bulk whois data not yet supported");
+            return Promise.resolve([]);
+        } else {
+            return this._createWhoisDump();
+        }
     }
 }

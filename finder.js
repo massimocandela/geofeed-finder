@@ -18,19 +18,21 @@ export default class Finder {
         this.csvParser = new CsvParser();
         this.downloadsOngoing = {};
 
-        this.connectors = [
-            new ConnectorRIPE(this.params),
-            new ConnectorAFRINIC(this.params),
-            new ConnectorAPNIC(this.params),
-            new ConnectorARIN(this.params),
-            new ConnectorLACNIC(this.params)
-        ];
+        this.connectors = {
+            "ripe": new ConnectorRIPE(this.params),
+            "afrinic": new ConnectorAFRINIC(this.params),
+            "apnic": new ConnectorAPNIC(this.params),
+            "arin": new ConnectorARIN(this.params),
+            "lacnic": new ConnectorLACNIC(this.params)
+        };
 
     };
 
     getBlocks = () => {
         return Promise
-            .all(this.connectors.map(connector => connector.getBlocks()))
+            .all(Object.keys(this.connectors)
+                .filter(key => this.params.include.includes(key))
+                .map(key => this.connectors[key].getBlocks()))
             .then(blocks => {
                 return [].concat.apply([], blocks).filter(i => !!i.inetnum);
             });
@@ -106,7 +108,7 @@ export default class Finder {
                 const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
                 const lessSpecificInetnumPrefix = lessSpecificInetnum.prefix;
 
-                // If there is a less specific inetnum contraddicting a more specific inetnum
+                // If there is a less specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
                 if (lessSpecificInetnum.valid) {
                     if (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix ||
@@ -127,6 +129,4 @@ export default class Finder {
             .then(this.getGeofeedsFiles)
             .then(this.setGeofeedPriority);
     };
-
-
 }
