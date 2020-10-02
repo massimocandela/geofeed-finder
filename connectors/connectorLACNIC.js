@@ -47,7 +47,7 @@ export default class ConnectorLACNIC extends Connector {
                 .on('line', (line) => {
                     if (line.startsWith("inetnum:") || line.startsWith("inet6num:")) {
                         lastInetnum = line;
-                    } else if (line.startsWith("remarks:") && line.includes("Geofeed ")) {
+                    } else if (line.startsWith("remarks:") && line.includes("Geofeed")) {
 
                         const geofeedUrl = this.matchGeofeedFile(line);
 

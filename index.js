@@ -28,7 +28,7 @@ const params = yargs
 
             .alias('i', 'include')
             .nargs('i', 1)
-            .default('i', 'ripe,apnic,lacnic,afrinic')
+            .default('i', 'ripe,apnic,lacnic,afrinic,arin')
             .describe('i', 'Include RIRs (comma-separated list)')
     })
     .help('h')
@@ -38,7 +38,7 @@ const params = yargs
 
 const options = {
     arinBulk: params.b,
-    include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic").split(","),
+    include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv"
 };
 
@@ -47,5 +47,5 @@ new Finder(options)
     .then(data => {
         fs.writeFileSync(options.output, toGeofeed(data));
     })
-    .then(() => console.log("Done! See result.csv"));
+    .then(() => console.log(`Done! See ${options.output}`));
 
