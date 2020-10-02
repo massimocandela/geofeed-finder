@@ -1,5 +1,9 @@
 import ConnectorRIPE from "./connectors/connectorRIPE";
-import connectorAFRINIC from "./connectors/connectorAFRINIC";
+import ConnectorAFRINIC from "./connectors/connectorAFRINIC";
+import ConnectorLACNIC from "./connectors/connectorLACNIC";
+import ConnectorAPNIC from "./connectors/connectorAPNIC";
+import ConnectorARIN from "./connectors/connectorARIN";
+
 import batchPromises from "batch-promises";
 import axios from "axios";
 import CsvParser from "./csvParser";
@@ -12,10 +16,14 @@ export default class Finder {
         this.params = params || {};
         this.cacheDir = this.params.cacheDir || ".cache/";
         this.csvParser = new CsvParser();
+        this.downloadsOngoing = {};
 
         this.connectors = [
             new ConnectorRIPE(this.params),
-            new connectorAFRINIC(this.params),
+            new ConnectorAFRINIC(this.params),
+            new ConnectorAPNIC(this.params),
+            new ConnectorARIN(this.params),
+            new ConnectorLACNIC(this.params)
         ];
 
     };
@@ -37,24 +45,28 @@ export default class Finder {
         const cachedFile = this._getFileName(file);
 
         if (fs.existsSync(cachedFile)) {
-            console.log("Cached", file);
+            console.log(block.inetnum, file, "[cache]");
 
             return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
+        } if (this.downloadsOngoing[cachedFile]) {
+            console.log(block.inetnum, file, "[cache]");
+            return Promise.resolve(this.downloadsOngoing[cachedFile]);
         } else {
-            console.log("Downloading", file);
-            return axios({
+            console.log(block.inetnum, file, "[download]");
+            this.downloadsOngoing[cachedFile] = axios({
                 url: file,
                 method: 'GET',
-                // responseType: 'text'
             })
                 .then(response => {
                     fs.writeFileSync(cachedFile, response.data);
                     return response.data;
                 })
                 .catch(error => {
-                    console.log("error", file, error.code);
+                    console.log("error", file, error.code || error.response.status);
                     return null;
                 });
+
+            return this.downloadsOngoing[cachedFile];
         }
     };
 

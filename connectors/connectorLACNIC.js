@@ -4,13 +4,13 @@ import fs from "fs";
 import moment from "moment";
 import zlib from "zlib";
 import readline from "readline";
-import ipUtils from "ip-sub";
 
 export default class ConnectorLACNIC extends Connector {
     constructor(params) {
         super(params)
 
         this.connectorName = "lacnic";
+        this.cacheDir += this.connectorName + "/";
         this.dumpUrl = this.params.dumpUrl || "http://ftp.lacnic.net/lacnic/dbase/lacnic.db.gz";
         this.cacheFile = [this.cacheDir, "lacnic.db.gz"].join("/").replace("//", "/");
         this.daysWhoisCache = 7;
@@ -28,10 +28,6 @@ export default class ConnectorLACNIC extends Connector {
             .trim();
     };
 
-    _matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi);
-    };
-
     _readLines = (compressedFile) => {
         return new Promise((resolve, reject) => {
             console.log("Parsing LACNIC data");
@@ -42,6 +38,9 @@ export default class ConnectorLACNIC extends Connector {
             let lineReader = readline.createInterface({
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
+                    .on("error", (error) => {
+                        console.log(`ERROR: Delete the cache file ${compressedFile}`);
+                    })
             });
 
             lineReader
@@ -50,7 +49,7 @@ export default class ConnectorLACNIC extends Connector {
                         lastInetnum = line;
                     } else if (line.startsWith("remarks:") && line.includes("Geofeed ")) {
 
-                        const geofeedUrl = this._matchGeofeedFile(line);
+                        const geofeedUrl = this.matchGeofeedFile(line);
 
                         if (geofeedUrl && geofeedUrl.length) {
                             const inetnum = this._matchInetnum(lastInetnum);
@@ -63,7 +62,7 @@ export default class ConnectorLACNIC extends Connector {
                     }
                 })
                 .on("error", (error) => {
-                    reject(error);
+                    return reject(error, `Delete the cache file ${compressedFile}`);
                 })
                 .on("close", () => {
                     resolve(geofeeds);
@@ -89,6 +88,7 @@ export default class ConnectorLACNIC extends Connector {
     _getDump = () => {
 
         if (this._isCacheValid()) {
+            console.log("Using LACNIC cached whois data");
             return Promise.resolve(this.cacheFile);
         } else {
             console.log("Downloading LACNIC whois data");
@@ -97,15 +97,17 @@ export default class ConnectorLACNIC extends Connector {
             return axios({
                 url: this.dumpUrl,
                 method: 'GET',
-                responseType: 'stream' // important
+                responseType: 'stream'
             })
                 .then( (response) => {
 
                     response.data.pipe(writer);
 
                     return new Promise((resolve, reject) => {
-                        writer.on('finish', () => resolve(this.cacheFile))
-                        writer.on('error', reject)
+                        writer.on('finish', () => resolve(this.cacheFile));
+                        writer.on('error', error => {
+                            return reject(error, `Delete the cache file ${this.cacheFile}`);
+                        });
                     })
                 });
         }

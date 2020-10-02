@@ -11,6 +11,7 @@ export default class ConnectorRIPE extends Connector {
         super(params)
 
         this.connectorName = "ripe";
+        this.cacheDir += this.connectorName + "/";
         this.dumpUrl = this.params.dumpUrl || "ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz";
         this.cacheFile = [this.cacheDir, "ripe.db.gz"].join("/").replace("//", "/");
         this.daysWhoisCache = 7;
@@ -34,10 +35,6 @@ export default class ConnectorRIPE extends Connector {
         }
     };
 
-    _matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi);
-    };
-
     _readLines = (compressedFile) => {
         return new Promise((resolve, reject) => {
             console.log("Parsing RIPE data");
@@ -48,6 +45,9 @@ export default class ConnectorRIPE extends Connector {
             let lineReader = readline.createInterface({
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
+                    .on("error", (error) => {
+                        console.log(`ERROR: Delete the cache file ${compressedFile}`);
+                    })
             });
 
             lineReader
@@ -56,7 +56,7 @@ export default class ConnectorRIPE extends Connector {
                         lastInetnum = line;
                     } else if (line.startsWith("remarks:") && line.includes("Geofeed ")) {
 
-                        const geofeedUrl = this._matchGeofeedFile(line);
+                        const geofeedUrl = this.matchGeofeedFile(line);
 
                         if (geofeedUrl && geofeedUrl.length) {
                             const inetnum = this._matchInetnum(lastInetnum);
@@ -69,7 +69,7 @@ export default class ConnectorRIPE extends Connector {
                     }
                 })
                 .on("error", (error) => {
-                    reject(error);
+                    return reject(error, `Delete the cache file ${compressedFile}`);
                 })
                 .on("close", () => {
                     resolve(geofeeds);
@@ -95,6 +95,7 @@ export default class ConnectorRIPE extends Connector {
     _getDump = () => {
 
         if (this._isCacheValid()) {
+            console.log("Using RIPE cached whois data");
             return Promise.resolve(this.cacheFile);
         } else {
             console.log("Downloading RIPE whois data");
@@ -103,7 +104,7 @@ export default class ConnectorRIPE extends Connector {
             return axios({
                 url: this.dumpUrl,
                 method: 'GET',
-                responseType: 'stream' // important
+                responseType: 'stream'
             })
                 .then( (response) => {
 
@@ -111,7 +112,9 @@ export default class ConnectorRIPE extends Connector {
 
                     return new Promise((resolve, reject) => {
                         writer.on('finish', () => resolve(this.cacheFile))
-                        writer.on('error', reject)
+                        writer.on('error', error => {
+                            return reject(error, `Delete the cache file ${this.cacheFile}`);
+                        });
                     })
                 });
         }

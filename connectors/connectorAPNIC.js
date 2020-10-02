@@ -5,14 +5,13 @@ import moment from "moment";
 import zlib from "zlib";
 import readline from "readline";
 import ipUtils from "ip-sub";
-import md5 from "md5";
-import batchPromises from "batch-promises";
 
 export default class ConnectorAPNIC extends Connector {
     constructor(params) {
         super(params)
 
-        this.connectorName = "APNIC";
+        this.connectorName = "apnic";
+        this.cacheDir += this.connectorName + "/";
         this.dumpUrls = this.params.dumpUrls || [
             "https://ftp.apnic.net/apnic/whois/apnic.db.inetnum.gz",
             "https://ftp.apnic.net/apnic/whois/apnic.db.inet6num.gz"
@@ -41,10 +40,6 @@ export default class ConnectorAPNIC extends Connector {
         }
     };
 
-    _matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi);
-    };
-
     _readLines = (compressedFile) => {
         return new Promise((resolve, reject) => {
             console.log("Parsing APNIC data");
@@ -55,6 +50,9 @@ export default class ConnectorAPNIC extends Connector {
             let lineReader = readline.createInterface({
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
+                    .on("error", (error) => {
+                         console.log(`ERROR: Delete the cache file ${compressedFile}`);
+                    })
             });
 
             lineReader
@@ -63,7 +61,7 @@ export default class ConnectorAPNIC extends Connector {
                         lastInetnum = line;
                     } else if (line.startsWith("remarks:") && line.includes("Geofeed ")) {
 
-                        const geofeedUrl = this._matchGeofeedFile(line);
+                        const geofeedUrl = this.matchGeofeedFile(line);
 
                         if (geofeedUrl && geofeedUrl.length) {
                             const inetnum = this._matchInetnum(lastInetnum);
@@ -76,7 +74,7 @@ export default class ConnectorAPNIC extends Connector {
                     }
                 })
                 .on("error", (error) => {
-                    reject(error);
+                    return reject(error, `Delete the cache file ${compressedFile}`);
                 })
                 .on("close", () => {
                     resolve(geofeeds);
@@ -116,8 +114,10 @@ export default class ConnectorAPNIC extends Connector {
                     writer.on('finish', () => {
                         resolve(cacheFile);
                         writer.end();
-                    })
-                    writer.on('error', reject)
+                    });
+                    writer.on('error', error => {
+                        return reject(error, `Delete the cache file ${cacheFile}`);
+                    });
                 })
             });
     }
@@ -125,6 +125,7 @@ export default class ConnectorAPNIC extends Connector {
     _getDump = () => {
 
         if (this._isCacheValid()) {
+            console.log("Using APNIC cached whois data");
             return Promise.resolve(this.cacheFiles);
         } else {
             console.log("Downloading APNIC whois data");

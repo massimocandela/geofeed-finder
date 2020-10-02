@@ -11,6 +11,7 @@ export default class ConnectorAFRINIC extends Connector {
         super(params)
 
         this.connectorName = "afrinic";
+        this.cacheDir += this.connectorName + "/";
         this.dumpUrl = this.params.dumpUrl || "https://ftp.afrinic.net/dbase/afrinic.db.gz";
         this.cacheFile = [this.cacheDir, "afrinic.db.gz"].join("/").replace("//", "/");
         this.daysWhoisCache = 7;
@@ -34,10 +35,6 @@ export default class ConnectorAFRINIC extends Connector {
         }
     };
 
-    _matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi);
-    };
-
     _readLines = (compressedFile) => {
         return new Promise((resolve, reject) => {
             console.log("Parsing AFRINIC data");
@@ -48,6 +45,9 @@ export default class ConnectorAFRINIC extends Connector {
             let lineReader = readline.createInterface({
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
+                    .on("error", (error) => {
+                        console.log(`ERROR: Delete the cache file ${compressedFile}`);
+                    })
             });
 
             lineReader
@@ -56,7 +56,7 @@ export default class ConnectorAFRINIC extends Connector {
                         lastInetnum = line;
                     } else if (line.startsWith("remarks:") && line.includes("Geofeed ")) {
 
-                        const geofeedUrl = this._matchGeofeedFile(line);
+                        const geofeedUrl = this.matchGeofeedFile(line);
 
                         if (geofeedUrl && geofeedUrl.length) {
                             const inetnum = this._matchInetnum(lastInetnum);
@@ -69,7 +69,7 @@ export default class ConnectorAFRINIC extends Connector {
                     }
                 })
                 .on("error", (error) => {
-                    reject(error);
+                    return reject(error, `Delete the cache file ${compressedFile}`);
                 })
                 .on("close", () => {
                     resolve(geofeeds);
@@ -95,6 +95,7 @@ export default class ConnectorAFRINIC extends Connector {
     _getDump = () => {
 
         if (this._isCacheValid()) {
+            console.log("Using AFRINIC cached whois data");
             return Promise.resolve(this.cacheFile);
         } else {
             console.log("Downloading AFRINIC whois data");
@@ -103,15 +104,17 @@ export default class ConnectorAFRINIC extends Connector {
             return axios({
                 url: this.dumpUrl,
                 method: 'GET',
-                responseType: 'stream' // important
+                responseType: 'stream'
             })
                 .then( (response) => {
 
                     response.data.pipe(writer);
 
                     return new Promise((resolve, reject) => {
-                        writer.on('finish', () => resolve(this.cacheFile))
-                        writer.on('error', reject)
+                        writer.on('finish', () => resolve(this.cacheFile));
+                        writer.on('error', error => {
+                            return reject(error, `Delete the cache file ${this.cacheFile}`);
+                        });
                     })
                 });
         }

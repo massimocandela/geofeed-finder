@@ -6,6 +6,10 @@ export default class Connector {
         this.params = params || {};
         this.connectorName = "connector";
         this.cacheDir = this.params.cacheDir || ".cache/";
+
+        if (!fs.existsSync(this.cacheDir)) {
+            fs.mkdirSync(this.cacheDir,  { recursive: true });
+        }
     }
 
     getBlocks = () => {
@@ -16,6 +20,10 @@ export default class Connector {
         return [this.cacheDir, md5(originalName)]
             .join("/")
             .replace("//", "/");
+    };
+
+    matchGeofeedFile = (remark) => {
+        return remark.match(/\bhttps?:\/\/\S+/gi);
     };
 
     getCachedBlocks = (file) => {
