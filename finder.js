@@ -9,6 +9,7 @@ import axios from "axios";
 import CsvParser from "./csvParser";
 import md5 from "md5";
 import fs from "fs";
+import moment from "moment";
 import ipUtils from "ip-sub";
 
 export default class Finder {
@@ -17,6 +18,10 @@ export default class Finder {
         this.cacheDir = this.params.cacheDir || ".cache/";
         this.csvParser = new CsvParser();
         this.downloadsOngoing = {};
+        this.startTime = moment();
+
+        this.cacheHeadersIndexFileName = this.cacheDir + "cache-index.json";
+        this._importCacheHeaderIndex();
 
         this.connectors = {
             "ripe": new ConnectorRIPE(this.params),
@@ -42,13 +47,56 @@ export default class Finder {
         return this.cacheDir + md5(file);
     };
 
+    _setGeofeedCacheHeaders = (response, cachedFile) => {
+        if (response.headers['cache-control']) {
+            const maxAge = response.headers['cache-control']
+                .split(",")
+                .filter(h => h.includes("max-age"))
+                .map(h => h.trim())
+                .pop();
+
+            if (maxAge) {
+                const age = maxAge.split("=").pop();
+                if (age && !isNaN(age)) {
+                    this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(parseInt(age), "seconds");
+                }
+            }
+        }
+
+        if (!this.cacheHeadersIndex[cachedFile]) {
+            this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(this.params.defaultCacheDays, "days");
+        }
+    };
+
+    _isCachedGeofeedValid = (cachedFile) => {
+
+        return fs.existsSync(cachedFile) &&
+            this.cacheHeadersIndex[cachedFile] &&
+            moment(this.cacheHeadersIndex[cachedFile]).isSameOrAfter(this.startTime);
+    };
+
+    _importCacheHeaderIndex = () => {
+        let tmp;
+        if (fs.existsSync(this.cacheHeadersIndexFileName)) {
+            tmp = JSON.parse(fs.readFileSync(this.cacheHeadersIndexFileName, 'utf-8'));
+            for (let key in tmp) {
+                tmp[key] = moment(tmp[key]);
+            }
+        }
+
+        this.cacheHeadersIndex = tmp || {};
+    };
+
+    _persistCacheIndex = () => {
+        fs.writeFileSync(this.cacheHeadersIndexFileName, JSON.stringify(this.cacheHeadersIndex));
+    };
+
     _getGeofeedFile = (block) => {
         const file = block.file;
         const cachedFile = this._getFileName(file);
 
-        if (fs.existsSync(cachedFile)) {
+        if (this._isCachedGeofeedValid(cachedFile)) {
             console.log(block.inetnum, file, "[cache]");
-
             return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
         } if (this.downloadsOngoing[cachedFile]) {
             console.log(block.inetnum, file, "[cache]");
@@ -61,6 +109,7 @@ export default class Finder {
             })
                 .then(response => {
                     fs.writeFileSync(cachedFile, response.data);
+                    this._setGeofeedCacheHeaders(response, cachedFile);
                     return response.data;
                 })
                 .catch(error => {
@@ -80,7 +129,10 @@ export default class Finder {
                     out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
                 });
         })
-            .then(() => [].concat.apply([], out));
+            .then(() => {
+                this._persistCacheIndex();
+                return [].concat.apply([], out);
+            });
     };
 
     validateGeofeeds = (geofeeds) => {

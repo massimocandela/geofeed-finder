@@ -37,6 +37,7 @@ const params = yargs
     .argv;
 
 const options = {
+    defaultCacheDays: 7,
     arinBulk: params.b,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv"

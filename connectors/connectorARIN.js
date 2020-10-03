@@ -15,7 +15,7 @@ export default class ConnectorARIN extends Connector {
         this.cacheDir += this.connectorName + "/";
         this.statFile = "ftp://ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest";
         this.cacheFile = [this.cacheDir, "arin.inetnums"].join("/").replace("//", "/");
-        this.daysWhoisCache = 7;
+        this.daysWhoisCache = this.params.defaultCacheDays;
 
         this.httpsAgent = new https.Agent({ keepAlive: true });
 

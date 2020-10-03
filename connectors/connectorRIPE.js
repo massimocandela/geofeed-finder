@@ -14,7 +14,7 @@ export default class ConnectorRIPE extends Connector {
         this.cacheDir += this.connectorName + "/";
         this.dumpUrl = this.params.dumpUrl || "ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz";
         this.cacheFile = [this.cacheDir, "ripe.db.gz"].join("/").replace("//", "/");
-        this.daysWhoisCache = 7;
+        this.daysWhoisCache = this.params.defaultCacheDays;
 
         if (!fs.existsSync(this.cacheDir)) {
             fs.mkdirSync(this.cacheDir,  { recursive: true });

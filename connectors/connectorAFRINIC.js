@@ -14,7 +14,7 @@ export default class ConnectorAFRINIC extends Connector {
         this.cacheDir += this.connectorName + "/";
         this.dumpUrl = this.params.dumpUrl || "https://ftp.afrinic.net/dbase/afrinic.db.gz";
         this.cacheFile = [this.cacheDir, "afrinic.db.gz"].join("/").replace("//", "/");
-        this.daysWhoisCache = 7;
+        this.daysWhoisCache = this.params.defaultCacheDays;
 
         if (!fs.existsSync(this.cacheDir)) {
             fs.mkdirSync(this.cacheDir,  { recursive: true });
