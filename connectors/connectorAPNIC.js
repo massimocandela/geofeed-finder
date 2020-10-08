@@ -23,7 +23,6 @@ export default class ConnectorAPNIC extends Connector {
         if (!fs.existsSync(this.cacheDir)) {
             fs.mkdirSync(this.cacheDir,  { recursive: true });
         }
-
     }
 
     _matchInetnum = (inetnum) => {
@@ -50,6 +49,7 @@ export default class ConnectorAPNIC extends Connector {
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
                     .on("error", (error) => {
+                        console.log(error);
                          console.log(`ERROR: Delete the cache file ${compressedFile}`);
                     })
             });

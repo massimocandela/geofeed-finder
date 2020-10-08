@@ -1,22 +1,18 @@
-import {Address4 as v4, Address6 as v6} from "ip-address";
 import ipUtils from "ip-sub";
 
 
-const cidrToRange = (cidr) => {
-    if (typeof(cidr) === "string") {
-        const af = ipUtils.getAddressFamily(cidr);
-        const addr = (af === 4) ? new v4(cidr) : new v6(cidr);
-
-        return [addr.startAddress().address, addr.endAddress().address];
+const checkPrefix = (prefix) => {
+    if (!prefix.includes("/")) {
+        prefix += (ipUtils.getAddressFamily(prefix) === 4) ? "/32" : "/128";
     }
+
+    return prefix;
 };
 
 class Geofeed {
     constructor(inetnum, prefix, country, region, city) {
-        // this.inetnum = cidrToRange(inetnum);
         this.inetnum = inetnum;
-        // this.prefixRange = cidrToRange(prefix);
-        this.prefix = prefix;
+        this.prefix = checkPrefix(prefix);
         this.country = country;
         this.region = region;
         this.city = city;

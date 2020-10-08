@@ -39,6 +39,7 @@ export default class ConnectorLACNIC extends Connector {
                 input: fs.createReadStream(compressedFile)
                     .pipe(zlib.createGunzip())
                     .on("error", (error) => {
+                        console.log(error);
                         console.log(`ERROR: Delete the cache file ${compressedFile}`);
                     })
             });
