@@ -8,7 +8,7 @@ Otherwise, you can just download the code and do `npm install` and `npm run serv
 
 The utility automatically manages the cache (so you can just run it how many times you like).
 
-## Usage Example
+### Usage Example
 
 
 #### If you just want to test the tool (try on one RIR):
@@ -38,3 +38,39 @@ If you have such authorization, soon there will be an option to use ARIN bulk da
 
 
 > Run ./geofeed-finder-linux-x64 -h for more options
+
+
+### Use geofeed-finder in your code
+
+Install it
+
+```bash
+npm install geofeed-finder
+```
+
+Import it
+
+```js
+import GeofeedFinder from "geofeed-finder";
+```
+
+Use it:
+
+```js
+
+const options = {
+    include: ["ripe", "apnic"], // The sources to explore (default: ripe, apnic, lacnic, afrinic, arin)
+    output: "result.csv" // The output file
+};
+
+new GeofeedFinder(options)
+    .getGeofeeds()
+    .then(geofeeds => { 
+        // Do something with the geofeeds 
+        // An array of objects { prefix, country, region, city }
+    });
+
+```
+
+
+
