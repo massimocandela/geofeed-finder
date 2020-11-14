@@ -18,4 +18,3 @@ npm run compile
 
 echo "--> Geofeed finder compiled in bin/"
 
-rm -rf dist

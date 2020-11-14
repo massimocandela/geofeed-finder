@@ -64,13 +64,12 @@
   },
   "release-it": {
     "hooks": {
-      "before:init": [
-        "npm ci"
-      ],
+      "before:init": [],
       "after:bump": "npm run build",
       "after:release": [
         "echo Successfully released ${name} v${version} to ${repo.repository}.",
-        "rm -r bin/"
+        "rm -r bin/",
+        "rm -r dist/"
       ]
     },
     "git": {
