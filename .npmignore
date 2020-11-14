@@ -9,3 +9,4 @@ logs/
 .cache/
 result.csv
 .env
+.gitignore
