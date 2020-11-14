@@ -58,8 +58,7 @@ Use it:
 ```js
 
 const options = {
-    include: ["ripe", "apnic"], // The sources to explore (default: ripe, apnic, lacnic, afrinic, arin)
-    output: "result.csv" // The output file
+    include: ["ripe", "apnic"] // The sources to explore (default: ripe, apnic, lacnic, afrinic, arin)
 };
 
 new GeofeedFinder(options)
