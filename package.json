@@ -1,12 +1,13 @@
 {
   "name": "geofeed-finder",
   "version": "1.0.9",
-  "description": "A tool to find geofeed files in rpsl and parse them correctly according to draft-ymbk-opsawg-finding-geofeeds",
-  "main": "index.js",
-  "bin": "index.js",
+  "description": "A tool to find geofeed files in rpsl and parse them correctly according to draft-ietf-opsawg-finding-geofeeds",
+  "main": "dist/finder.js",
+  "bin": "dist/index.js",
   "scripts": {
     "babel": "./node_modules/.bin/babel",
     "build": "./build.sh",
+    "compile": "babel src -d dist",
     "release": "dotenv release-it",
     "serve": "babel-node index.js",
     "inspect": "node --inspect --require @babel/register index.js",
@@ -66,7 +67,7 @@
       "before:init": [
         "npm ci"
       ],
-      "after:bump": "npm run build",
+      "after:bump": "npm run compile",
       "after:release": [
         "echo Successfully released ${name} v${version} to ${repo.repository}.",
         "rm -r bin/"
@@ -96,7 +97,7 @@
       "release": false
     },
     "npm": {
-      "publish": false
+      "publish": true
     },
     "github": {
       "release": true,

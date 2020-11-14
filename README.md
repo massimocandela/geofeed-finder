@@ -1,6 +1,6 @@
 # geofeed-finder
 
-This utility discovers and retrieves geofeed files from whois data according to [draft-ymbk-opsawg-finding-geofeeds](https://datatracker.ietf.org/doc/draft-ymbk-opsawg-finding-geofeeds/).
+This utility discovers and retrieves geofeed files from whois data according to [draft-ietf-opsawg-finding-geofeeds](https://datatracker.ietf.org/doc/draft-ietf-opsawg-finding-geofeeds/).
 
 > To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/).
 

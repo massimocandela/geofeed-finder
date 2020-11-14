@@ -1,7 +1,7 @@
 .idea/
 node_modules/
 bin/
-build/
+dist/
 logs/
 .DS_Store
 .npmrc

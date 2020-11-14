@@ -1,6 +1,5 @@
 import ipUtils from "ip-sub";
 
-
 const checkPrefix = (prefix) => {
     if (!prefix.includes("/")) {
         prefix += (ipUtils.getAddressFamily(prefix) === 4) ? "/32" : "/128";
