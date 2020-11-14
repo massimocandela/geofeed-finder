@@ -1,16 +1,12 @@
-import ConnectorRIPE from "./connectors/connectorRIPE";
-import ConnectorAFRINIC from "./connectors/connectorAFRINIC";
-import ConnectorLACNIC from "./connectors/connectorLACNIC";
-import ConnectorAPNIC from "./connectors/connectorAPNIC";
-import ConnectorARIN from "./connectors/connectorARIN";
-
 import batchPromises from "batch-promises";
 import axios from "axios";
+import WhoisParser from "bulk-whois-parser";
 import CsvParser from "./csvParser";
 import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
+
 
 export default class Finder {
     constructor(params) {
@@ -23,23 +19,26 @@ export default class Finder {
         this.cacheHeadersIndexFileName = this.cacheDir + "cache-index.json";
         this._importCacheHeaderIndex();
 
-        this.connectors = {
-            "ripe": new ConnectorRIPE(this.params),
-            "afrinic": new ConnectorAFRINIC(this.params),
-            "apnic": new ConnectorAPNIC(this.params),
-            "arin": new ConnectorARIN(this.params),
-            "lacnic": new ConnectorLACNIC(this.params)
-        };
+        this.connectors = ["ripe", "afrinic", "apnic", "arin", "lacnic"]
+            .filter(key => this.params.include.includes(key));
 
+        this.whois = new WhoisParser({ repos: this.connectors });
     };
 
+    filterFunction = (inetnum) => {
+
+        if (inetnum.remarks && inetnum.remarks.length > 0 ) {
+            return inetnum.remarks.some(i => i.startsWith("Geofeed"));
+        }
+
+        return false;
+    }
+
     getBlocks = () => {
-        return Promise
-            .all(Object.keys(this.connectors)
-                .filter(key => this.params.include.includes(key))
-                .map(key => this.connectors[key].getBlocks()))
+        return this.whois
+            .getObjects(["inetnum", "inet6num"], this.filterFunction,  ["inetnum", "inet6num", "remarks", "last-updated"])
             .then(blocks => {
-                return [].concat.apply([], blocks).filter(i => !!i.inetnum);
+                return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
             });
     };
 
@@ -48,6 +47,8 @@ export default class Finder {
     };
 
     _setGeofeedCacheHeaders = (response, cachedFile) => {
+        let setAge = 3600 * 24 * this.params.defaultCacheDays; // 1 week (see draft)
+
         if (response.headers['cache-control']) {
             const maxAge = response.headers['cache-control']
                 .split(",")
@@ -58,14 +59,12 @@ export default class Finder {
             if (maxAge) {
                 const age = maxAge.split("=").pop();
                 if (age && !isNaN(age)) {
-                    this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(parseInt(age), "seconds");
+                    setAge = Math.max(parseInt(age), 3600);
                 }
             }
         }
 
-        if (!this.cacheHeadersIndex[cachedFile]) {
-            this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(this.params.defaultCacheDays, "days");
-        }
+        this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(setAge, "seconds");
     };
 
     _isCachedGeofeedValid = (cachedFile) => {
@@ -92,7 +91,7 @@ export default class Finder {
     };
 
     _getGeofeedFile = (block) => {
-        const file = block.file;
+        const file = block.geofeed;
         const cachedFile = this._getFileName(file);
 
         if (this._isCachedGeofeedValid(cachedFile)) {
@@ -145,6 +144,17 @@ export default class Finder {
 
     };
 
+    getMostUpdatedInetnums = (inetnums) => {
+        const index = {};
+        for (let inetnum of inetnums) {
+            index[inetnum.inetnum] = (!index[inetnum.inetnum] || index[inetnum.inetnum].lastUpdate < inetnum.lastUpdate) ?
+                inetnum :
+                index[inetnum.inetnum]
+        }
+
+        return Object.values(index);
+    };
+
     setGeofeedPriority = (geofeeds) => {
 
         const sortedByLessSpecificInetnum = geofeeds
@@ -162,12 +172,10 @@ export default class Finder {
 
                 // If there is a less specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
-                if (lessSpecificInetnum.valid) {
-                    if (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix ||
-                        ipUtils.isSubnet(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix)) {
-                        lessSpecificInetnum.valid = false;
-                        console.log(`WARNING: prefix:${moreSpecificInetnumPrefix} declared in inetnum:${moreSpecificInetnum.inetnum} conflicts with prefix:${lessSpecificInetnumPrefix} declared in inetnum:${lessSpecificInetnum.inetnum}`);
-                    }
+                if (lessSpecificInetnum.valid &&
+                    (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix || ipUtils.isSubnet(lessSpecificInetnumPrefix, moreSpecificInetnumPrefix))) {
+                    lessSpecificInetnum.valid = false;
+                    // console.log(`WARNING: prefix:${moreSpecificInetnumPrefix} declared in inetnum:${moreSpecificInetnum.inetnum} conflicts with prefix:${lessSpecificInetnumPrefix} declared in inetnum:${lessSpecificInetnum.inetnum}`);
                 }
             }
 
@@ -176,8 +184,41 @@ export default class Finder {
         return sortedByLessSpecificInetnum.filter(i => i.valid);
     };
 
+    matchGeofeedFile = (remark) => {
+        return remark.match(/\bhttps?:\/\/\S+/gi) || [];
+    };
+
+    translateObject = (object) => {
+
+        let inetnum = object.inetnum || object.inet6num;
+        let remarks = object.remarks;
+
+        let inetnums = [inetnum];
+        if (!inetnum.includes("/")) {
+            const ips = inetnum.split("-").map(ip => ip.trim());
+            inetnums = ipUtils.ipRangeToCidr(ips[0], ips[1]);
+        }
+
+        const lastUpdate = moment(object["last-updated"]);
+
+        const remark = remarks.filter(i => i.startsWith("Geofeed"))[0];
+        const geofeed = (remark) ? this.matchGeofeedFile(remark).pop() : null;
+
+        return inetnums
+            .map(inetnum => {
+
+                return {
+                    inetnum,
+                    geofeed,
+                    lastUpdate
+                }
+            });
+    };
+
     getGeofeeds = () => {
         return this.getBlocks()
+            .then(objects => [].concat.apply([], objects.map(this.translateObject)))
+            .then(this.getMostUpdatedInetnums)
             .then(this.getGeofeedsFiles)
             .then(this.setGeofeedPriority);
     };
