@@ -6,7 +6,7 @@ This utility discovers and retrieves geofeed files from whois data according to 
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
-The utility automatically manages the cache (so you can just run it how many times you like).
+The utility automatically manages the cache.
 
 ### Usage Example
 
@@ -33,8 +33,7 @@ Each entry is a prefix or IP which has been selected according to the draft (e.g
 Downloading data from ARIN whois takes longer. 
 This is because the other RIRs publicly provide anonymized bulk whois data.
 Instead, ARIN requires authorization to access bulk whois data. 
-If you have such authorization, soon there will be an option to use ARIN bulk data, otherwise rdap is used 
-(default, which doesn't require such authorization.)
+If you have such authorization, soon there will be an option to use ARIN bulk data, otherwise rdap is used (default, which doesn't require authorization.)
 
 
 > Run ./geofeed-finder-linux-x64 -h for more options
@@ -42,13 +41,13 @@ If you have such authorization, soon there will be an option to use ARIN bulk da
 
 ### Use geofeed-finder in your code
 
-Install it
+Install it:
 
 ```bash
 npm install geofeed-finder
 ```
 
-Import it
+Import it:
 
 ```js
 import GeofeedFinder from "geofeed-finder";
