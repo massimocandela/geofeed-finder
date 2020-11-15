@@ -138,7 +138,7 @@ export default class Finder {
         return geofeeds
             .filter(geofeed => {
                 return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
-                    (geofeed.inetnum === geofeed.prefix || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
+                    (ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
             });
 
     };
@@ -172,7 +172,7 @@ export default class Finder {
                 // If there is a less specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
                 if (lessSpecificInetnum.valid &&
-                    (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix ||
+                    (ipUtils.isEqualPrefix(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix) ||
                         ipUtils.isSubnet(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix))) {
                     lessSpecificInetnum.valid = false;
                 }
