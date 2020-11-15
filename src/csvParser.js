@@ -5,7 +5,7 @@ const checkPrefix = (prefix) => {
         prefix += (ipUtils.getAddressFamily(prefix) === 4) ? "/32" : "/128";
     }
 
-    return prefix;
+    return (ipUtils.isValidPrefix(prefix)) ? prefix.toLowerCase() : null;
 };
 
 class Geofeed {

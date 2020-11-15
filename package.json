@@ -9,7 +9,7 @@
     "build": "./build.sh",
     "compile": "babel src -d dist",
     "release": "dotenv release-it",
-    "serve": "babel-node index.js",
+    "serve": "babel-node src/index.js",
     "inspect": "node --inspect --require @babel/register index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -46,7 +46,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.0.7",
+    "bulk-whois-parser": "^1.0.8",
     "cli-progress": "^3.8.2",
     "ip-address": "^6.4.0",
     "ip-sub": "^1.0.14",

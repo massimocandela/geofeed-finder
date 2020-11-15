@@ -136,11 +136,10 @@ export default class Finder {
 
     validateGeofeeds = (geofeeds) => {
         return geofeeds
-            .filter(geofeed =>
-                geofeed &&
-                !!geofeed.inetnum && geofeed.inetnum === geofeed.prefix ||
-                ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix)
-            );
+            .filter(geofeed => {
+                return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
+                    (geofeed.inetnum === geofeed.prefix || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
+            });
 
     };
 
@@ -173,9 +172,9 @@ export default class Finder {
                 // If there is a less specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
                 if (lessSpecificInetnum.valid &&
-                    (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix || ipUtils.isSubnet(lessSpecificInetnumPrefix, moreSpecificInetnumPrefix))) {
+                    (moreSpecificInetnumPrefix === lessSpecificInetnumPrefix ||
+                        ipUtils.isSubnet(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix))) {
                     lessSpecificInetnum.valid = false;
-                    // console.log(`WARNING: prefix:${moreSpecificInetnumPrefix} declared in inetnum:${moreSpecificInetnum.inetnum} conflicts with prefix:${lessSpecificInetnumPrefix} declared in inetnum:${lessSpecificInetnum.inetnum}`);
                 }
             }
 
