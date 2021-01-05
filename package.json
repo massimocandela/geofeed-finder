@@ -38,15 +38,15 @@
     "@babel/node": "^7.12.10",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
-    "@babel/preset-env": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
     "dotenv-cli": "^4.0.0",
     "pkg": "^4.4.9",
     "release-it": "^14.2.2"
   },
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.0.9",
+    "bulk-whois-parser": "^1.0.10",
     "cli-progress": "^3.8.2",
     "ip-address": "^6.4.0",
     "ip-sub": "^1.0.19",
