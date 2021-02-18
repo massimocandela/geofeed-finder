@@ -46,7 +46,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.0.10",
+    "bulk-whois-parser": "^1.0.11",
     "cli-progress": "^3.8.2",
     "ip-address": "^6.4.0",
     "ip-sub": "^1.0.19",
