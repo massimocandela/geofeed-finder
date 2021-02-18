@@ -1,9 +1,11 @@
 {
   "name": "geofeed-finder",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "A tool to find geofeed files in rpsl and parse them correctly according to draft-ietf-opsawg-finding-geofeeds",
   "main": "dist/finder.js",
-  "bin": "dist/index.js",
+  "bin": {
+    "geofeed-finder": "dist/index.js"
+  },
   "scripts": {
     "babel": "./node_modules/.bin/babel",
     "build": "./build.sh",
