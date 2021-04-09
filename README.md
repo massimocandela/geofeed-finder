@@ -2,7 +2,7 @@
 
 This utility discovers and retrieves geofeed files from whois data according to [draft-ietf-opsawg-finding-geofeeds](https://datatracker.ietf.org/doc/draft-ietf-opsawg-finding-geofeeds/).
 
-> To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/).
+To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/).
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
@@ -10,15 +10,16 @@ The utility automatically manages the cache.
 
 ### Usage Example
 
+#### If you created a geofeed in whois data and you want to test that everything is fine
 
-#### If you just want to test the tool (try on one RIR):
+* Run the binary `./geofeed-finder-linux-x64 -t YOUR_PREFIX`
+
+#### If you want to retrieve all the geofeeds in a RIR:
 
 * Run the binary `./geofeed-finder-linux-x64 -i ripe`
 * See the final geofeed file in `result.csv`
 
-You can select the RIRs you want to discover geofeeds from:
-
-`./geofeed-finder-linux-x64 -i ripe,apnic`
+You can select multiple RIRs: `./geofeed-finder-linux-x64 -i ripe,apnic`
 
 
 #### If you want to discover geofeeds across all RIRs:

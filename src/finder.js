@@ -6,7 +6,7 @@ import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
-
+import webWhois from "whois";
 
 export default class Finder {
     constructor(params) {
@@ -215,10 +215,40 @@ export default class Finder {
     };
 
     getGeofeeds = () => {
-        return this.getBlocks()
-            .then(objects => [].concat.apply([], objects.map(this.translateObject)))
-            .then(this.getMostUpdatedInetnums)
-            .then(this.getGeofeedsFiles)
-            .then(this.setGeofeedPriority);
+        if (this.params.test) {
+            return this.getInetnum(this.params.test.split("/")[0])
+                .then(answer => {
+                    const urls = answer.split("\n")
+                        .filter(i => i.includes("Geofeed"))
+                        .map(this.matchGeofeedFile);
+
+                    return [].concat.apply([], urls)
+                        .map(geofeed => {
+                            return {
+                                inetnum: this.params.test.trim(),
+                                geofeed,
+                                lastUpdate: moment() // It doesn't matter in this case
+                            };
+                        });
+                })
+                .then(this.getGeofeedsFiles);
+        } else {
+            return this.getBlocks()
+                .then(objects => [].concat.apply([], objects.map(this.translateObject)))
+                .then(this.getMostUpdatedInetnums)
+                .then(this.getGeofeedsFiles)
+                .then(this.setGeofeedPriority);
+        }
     };
+
+    getInetnum = (prefix) =>
+        new Promise((resolve, reject) => {
+            webWhois.lookup(prefix, (error, data) => {
+                if (error) {
+                    reject(error)
+                } else {
+                    resolve(data);
+                }
+            })
+        });
 }

@@ -6,7 +6,7 @@ const toGeofeed = (geofeedsObjects) => {
     return geofeedsObjects
         .map(g => `${g.prefix},${g.country},${g.region},${g.city}`)
         .join("\n");
-}
+};
 
 const params = yargs
     .usage('Usage: $0 <command> [options]')
@@ -21,6 +21,10 @@ const params = yargs
             .nargs('o', 1)
             .default('o', 'result.csv')
             .describe('o', 'Output file')
+
+            .alias('t', 'test')
+            .nargs('t', 1)
+            .describe('t', 'Test specific inetnum using RDAP')
 
             .alias('b', 'arin-bulk')
             .nargs('b', 0)
@@ -40,13 +44,17 @@ const options = {
     defaultCacheDays: 7,
     arinBulk: params.b,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
-    output: params.o || "result.csv"
+    output: params.o || "result.csv",
+    test: params.t || null,
 };
 
 new Finder(options)
     .getGeofeeds()
     .then(data => {
-        fs.writeFileSync(options.output, toGeofeed(data));
-    })
-    .then(() => console.log(`Done! See ${options.output}`));
-
+        if (!!options.test) {
+            console.log(toGeofeed(data));
+        } else {
+            fs.writeFileSync(options.output, toGeofeed(data));
+            console.log(`Done! See ${options.output}`)
+        }
+    });
