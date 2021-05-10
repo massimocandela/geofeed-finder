@@ -39,7 +39,8 @@ export default class Finder {
             .getObjects(["inetnum", "inet6num"], this.filterFunction,  ["inetnum", "inet6num", "remarks", "last-updated"])
             .then(blocks => {
                 return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
-            });
+            })
+            .catch(console.log);
     };
 
     _getFileName = (file) => {
