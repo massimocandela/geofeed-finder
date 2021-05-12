@@ -235,10 +235,10 @@ export default class Finder {
                 .then(this.getGeofeedsFiles);
         } else {
             return this.getBlocks()
-                .then(objects => [].concat.apply([], objects.map(this.translateObject)))
+                .then(objects => [].concat.apply([], (objects || []).map(this.translateObject)))
                 .then(this.getMostUpdatedInetnums)
                 .then(this.getGeofeedsFiles)
-                .then(this.setGeofeedPriority);
+                .then(this.setGeofeedPriority)
         }
     };
 

@@ -9,11 +9,12 @@ const checkPrefix = (prefix) => {
 };
 
 class Geofeed {
-    constructor(inetnum, prefix, country, region, city) {
-        this.inetnum = inetnum;
+    constructor(inetnum, prefix, country, region, city, zip) {
+        this.inetnum = inetnum.toLowerCase();
         this.prefix = checkPrefix(prefix);
-        this.country = country;
-        this.region = region;
+        this.country = country ? country.toUpperCase() : null;
+        this.region = region ? region.toUpperCase() : null;
+        this.zip = zip || null;
         this.city = city;
         this.valid = true;
     }
@@ -28,7 +29,7 @@ export default class CsvParser {
 
             for (let line of lines) {
                 if (line !== "" && !line.includes("#")) {
-                    out.push(new Geofeed(inetnum, ...line.split(",")));
+                    out.push(new Geofeed(inetnum, ...line.split(",").map(i => i.trim())));
                 }
             }
         }

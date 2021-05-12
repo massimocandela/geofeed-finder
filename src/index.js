@@ -4,7 +4,7 @@ import yargs from 'yargs';
 
 const toGeofeed = (geofeedsObjects) => {
     return geofeedsObjects
-        .map(g => `${g.prefix},${g.country},${g.region},${g.city}`)
+        .map(g => `${g.prefix || ""},${g.country || ""},${g.region || ""},${g.city || ""},${g.zip || ""},`)
         .join("\n");
 };
 
