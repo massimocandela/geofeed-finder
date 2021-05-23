@@ -132,6 +132,13 @@ export default class Finder {
             .then(() => {
                 this._persistCacheIndex();
                 return [].concat.apply([], out);
+            })
+            .then(data => {
+               if (!this.params.includeZip) {
+                   data.forEach(i => i.zip = null);
+               }
+
+               return data;
             });
     };
 

@@ -30,6 +30,10 @@ const params = yargs
             .nargs('b', 0)
             .describe('b', 'Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/')
 
+            // .alias('z', 'include-zip')
+            // .nargs('z', 0)
+            // .describe('z', 'Zip codes are deprecated in geofeed and by default are excluded from the output.')
+
             .alias('i', 'include')
             .nargs('i', 1)
             .default('i', 'ripe,apnic,lacnic,afrinic,arin')
@@ -43,6 +47,7 @@ const params = yargs
 const options = {
     defaultCacheDays: 7,
     arinBulk: params.b,
+    includeZip: params.z || false,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
