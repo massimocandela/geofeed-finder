@@ -134,19 +134,29 @@ export default class Finder {
                 return [].concat.apply([], out);
             })
             .then(data => {
-               if (!this.params.includeZip) {
-                   data.forEach(i => i.zip = null);
-               }
+                if (!this.params.includeZip) {
+                    data.forEach(i => i.zip = null);
+                }
 
-               return data;
+                return data;
             });
     };
 
     validateGeofeeds = (geofeeds) => {
         return geofeeds
             .filter(geofeed => {
-                return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
-                    (ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
+                const errors = geofeed.validate();
+
+                if (errors.length > 0) {
+                    console.log(`Error: ${geofeed} ${errors.join(", ")}`);
+                }
+
+                if (this.params.keepNonIso || errors.length === 0) {
+                    return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
+                        (ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
+                }
+
+                return false;
             });
 
     };
@@ -249,9 +259,9 @@ export default class Finder {
         }
     };
 
-    getInetnum = (prefix) =>
-        new Promise((resolve, reject) => {
-            webWhois.lookup(prefix, (error, data) => {
+    _whois = (prefix, server) => {
+        return new Promise((resolve, reject) => {
+            webWhois.lookup(prefix, { follow: 4, verbose: true }, (error, data) => {
                 if (error) {
                     reject(error)
                 } else {
@@ -259,4 +269,11 @@ export default class Finder {
                 }
             })
         });
+    }
+
+    getInetnum = (prefix) =>
+        this._whois(prefix)
+            .then(list => {
+                return list.map(i => i.data).join("\n")
+            });
 }

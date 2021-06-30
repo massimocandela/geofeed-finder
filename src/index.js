@@ -4,7 +4,7 @@ import yargs from 'yargs';
 
 const toGeofeed = (geofeedsObjects) => {
     return geofeedsObjects
-        .map(g => `${g.prefix || ""},${g.country || ""},${g.region || ""},${g.city || ""},${g.zip || ""},`)
+        // .map(g => `${g.prefix || ""},${g.country || ""},${g.region || ""},${g.city || ""},${g.zip || ""},`)
         .join("\n");
 };
 
@@ -34,6 +34,10 @@ const params = yargs
             // .nargs('z', 0)
             // .describe('z', 'Zip codes are deprecated in geofeed and by default are excluded from the output.')
 
+            .alias('k', 'keep-non-iso')
+            .nargs('k', 0)
+            .describe('k', 'Keep entries with invalid ISO codes')
+
             .alias('i', 'include')
             .nargs('i', 1)
             .default('i', 'ripe,apnic,lacnic,afrinic,arin')
@@ -48,6 +52,7 @@ const options = {
     defaultCacheDays: 7,
     arinBulk: params.b,
     includeZip: params.z || false,
+    keepNonIso: params.k || false,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
