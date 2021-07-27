@@ -67,4 +67,5 @@ new Finder(options)
             fs.writeFileSync(options.output, toGeofeed(data));
             console.log(`Done! See ${options.output}`)
         }
-    });
+    })
+    .catch(error => console.log(error.message));
