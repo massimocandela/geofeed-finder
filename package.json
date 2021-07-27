@@ -9,7 +9,7 @@
   "scripts": {
     "babel": "./node_modules/.bin/babel",
     "build": "./build.sh",
-    "compile": "babel src -d dist",
+    "compile": "rm -rf dist/ && babel src -d dist && cp -R src/dataset/ dist/dataset/",
     "release": "dotenv release-it",
     "serve": "babel-node src/index.js",
     "inspect": "node --inspect --require @babel/register index.js",
@@ -60,7 +60,9 @@
   },
   "pkg": {
     "scripts": [],
-    "assets": [],
+    "assets": [
+      "./src/dataset/*.json"
+    ],
     "targets": [
       "node12"
     ]
