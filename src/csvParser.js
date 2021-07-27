@@ -1,6 +1,7 @@
 import ipUtils from "ip-sub";
-import iso3166a from "iso-3166-1";
-import iso3166b from "iso-3166-2";
+import IsoAbstraction from "./isoAbstraction";
+
+const iso = new IsoAbstraction();
 
 const checkPrefix = (prefix) => {
     if (!prefix.includes("/")) {
@@ -23,9 +24,9 @@ class Geofeed {
 
     validate = () => {
         const out = [];
-        const validCountry = !this.country || iso3166a.whereAlpha2(this.country.toLowerCase());
-        const validRegion = !this.region || iso3166b.subdivision(this.region);
-        const validCombination = !this.country || !this.region || !!validCountry && !!validRegion && validRegion.countryCode === this.country;
+        const validCountry = !this.country || iso.isValidCountryCode(this.country);
+        const validRegion = !this.region || iso.isValidSubdivisionCode(this.region);
+        const validCombination = !this.country || !this.region || !!validCountry && !!validRegion && iso.isSubdivisionInCountry(this.region, this.country);
 
         if (!validCountry) {
             out.push("Not valid Country Code (iso-3166-1)");
