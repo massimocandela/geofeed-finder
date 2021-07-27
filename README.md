@@ -6,11 +6,11 @@ To use the compiled version (linux, mac, windows), see [releases](https://github
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
-The utility automatically manages the cache.
+The utility automatically manages the cache and the validation of the ISO codes.
 
 ### Usage Example
 
-#### If you created a geofeed in whois data and you want to test that everything is fine
+#### If you created a link to geofeeds in whois data and you want to test that everything is fine
 
 * Run the binary `./geofeed-finder-linux-x64 -t YOUR_PREFIX`
 
@@ -29,6 +29,8 @@ You can select multiple RIRs: `./geofeed-finder-linux-x64 -i ripe,apnic`
 
 The final geofeed file is a file containing all the geofeeds discovered in whois data.
 Each entry is a prefix or IP which has been selected according to the draft (e.g. accepted only if contained by parent inetnum, priority to longest prefix match, etc.)
+
+To skip the ISO code validation, use the option `-k`. Use `-h` for more options.
 
 
 Downloading data from ARIN whois takes longer. 
