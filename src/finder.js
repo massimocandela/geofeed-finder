@@ -22,7 +22,10 @@ export default class Finder {
         this.connectors = ["ripe", "afrinic", "apnic", "arin", "lacnic"]
             .filter(key => this.params.include.includes(key));
 
-        this.whois = new WhoisParser({ repos: this.connectors });
+        this.whois = new WhoisParser({
+            repos: this.connectors,
+            userAgent: "geofeed-finder"
+        });
     };
 
     filterFunction = (inetnum) => {
