@@ -36,7 +36,7 @@
   "homepage": "https://github.com/massimocandela/geofeed-finder#readme",
   "devDependencies": {
     "@babel/cli": "^7.15.4",
-    "@babel/core": "^7.15.4",
+    "@babel/core": "^7.15.5",
     "@babel/node": "^7.15.4",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
     "@babel/plugin-proposal-object-rest-spread": "^7.14.7",
@@ -46,7 +46,7 @@
     "release-it": "^14.11.5"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.3",
     "batch-promises": "0.0.3",
     "bulk-whois-parser": "^1.0.21",
     "cli-progress": "^3.9.0",
