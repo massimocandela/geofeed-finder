@@ -48,8 +48,9 @@
   "dependencies": {
     "axios": "^0.21.4",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.0.21",
+    "bulk-whois-parser": "^1.0.22",
     "cli-progress": "^3.9.0",
+    "geofeed-validator": "^1.0.1",
     "ip-address": "^8.1.0",
     "ip-sub": "^1.1.0",
     "md5": "^2.3.0",

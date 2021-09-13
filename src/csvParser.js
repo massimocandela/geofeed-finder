@@ -1,7 +1,5 @@
 import ipUtils from "ip-sub";
-import IsoAbstraction from "./isoAbstraction";
-
-const iso = new IsoAbstraction();
+import validator from "geofeed-validator";
 
 const checkPrefix = (prefix) => {
     if (!prefix.includes("/")) {
@@ -23,24 +21,7 @@ class Geofeed {
     };
 
     validate = () => {
-        const out = [];
-        const validCountry = !this.country || iso.isValidCountryCode(this.country);
-        const validRegion = !this.region || iso.isValidSubdivisionCode(this.region);
-        const validCombination = !this.country || !this.region || !!validCountry && !!validRegion && iso.isSubdivisionInCountry(this.region, this.country);
-
-        if (!validCountry) {
-            out.push("Not valid Country Code (iso-3166-1)");
-        }
-
-        if (!validRegion) {
-            out.push("Not valid Subdivision Code (iso-3166-2)");
-        }
-
-        if (validCountry && validRegion && !validCombination) {
-            out.push("The Subdivision is not inside the Country");
-        }
-
-        return out;
+        return validator.fromArray([this.prefix, this.country, this.region, this.city, this.zip]);
     };
 
     toString = () => {
