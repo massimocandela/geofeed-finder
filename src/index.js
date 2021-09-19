@@ -2,11 +2,7 @@ import Finder from "./finder"
 import fs from "fs";
 import yargs from 'yargs';
 
-const toGeofeed = (geofeedsObjects) => {
-    return geofeedsObjects
-        // .map(g => `${g.prefix || ""},${g.country || ""},${g.region || ""},${g.city || ""},${g.zip || ""},`)
-        .join("\n");
-};
+const toGeofeed = (geofeedsObjects) => geofeedsObjects.join("\n");
 
 const params = yargs
     .usage('Usage: $0 <command> [options]')
