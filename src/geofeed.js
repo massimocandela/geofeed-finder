@@ -23,6 +23,8 @@ export default class Geofeed {
             this.region || "",
             this.city || "",
             this.zip || ""
-        ].join(",");
+        ]
+            .join(",")
+            .replace(/"/g,"");
     }
 }
