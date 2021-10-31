@@ -22,6 +22,10 @@ const params = yargs
             .nargs('t', 1)
             .describe('t', 'Test specific inetnum using RDAP')
 
+            .alias('s', 'silent')
+            .nargs('s', 0)
+            .describe('s', "Silent mode, don't print errors")
+
             .alias('b', 'arin-bulk')
             .nargs('b', 0)
             .describe('b', 'Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/')
@@ -48,6 +52,7 @@ const options = {
     defaultCacheDays: 7,
     arinBulk: params.b,
     includeZip: params.z || false,
+    silent: params.s || false,
     keepNonIso: params.k || false,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",

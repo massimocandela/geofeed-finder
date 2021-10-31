@@ -161,7 +161,7 @@ export default class Finder {
                     valid = false;
                 }
 
-                if (errors.length > 0) {
+                if (!this.params.silent && errors.length > 0) {
                     console.log(`Error: ${geofeed} ${errors.join(", ")}`);
                 }
 
