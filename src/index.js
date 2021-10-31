@@ -30,9 +30,9 @@ const params = yargs
             .nargs('b', 0)
             .describe('b', 'Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/')
 
-            // .alias('z', 'include-zip')
-            // .nargs('z', 0)
-            // .describe('z', 'Zip codes are deprecated in geofeed and by default are excluded from the output.')
+            .alias('z', 'include-zip')
+            .nargs('z', 0)
+            .describe('z', 'Zip codes are deprecated in geofeed and by default are excluded from the output.')
 
             .alias('k', 'keep-non-iso')
             .nargs('k', 0)
