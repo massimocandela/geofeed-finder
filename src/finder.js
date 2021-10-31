@@ -148,18 +148,24 @@ export default class Finder {
     validateGeofeeds = (geofeeds) => {
         return geofeeds
             .filter(geofeed => {
+                let valid = true;
                 const errors = geofeed.validate();
+
+                if (!this.params.keepNonIso && errors.length > 0) {
+                    valid = false;
+                }
+
+                if (geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
+                    !(ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix))) {
+                    errors.push("Missing parent inetnum");
+                    valid = false;
+                }
 
                 if (errors.length > 0) {
                     console.log(`Error: ${geofeed} ${errors.join(", ")}`);
                 }
 
-                if (this.params.keepNonIso || errors.length === 0) {
-                    return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
-                        (ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
-                }
-
-                return false;
+                return valid;
             });
 
     };
