@@ -65,7 +65,17 @@ new Finder(options)
         if (!!options.test) {
             console.log(toGeofeed(data));
         } else {
-            fs.writeFileSync(options.output, toGeofeed(data));
+
+            fs.writeFileSync(options.output, "");
+            const out = fs.createWriteStream(options.output, {
+                flags: 'a'
+            });
+
+            for (let line of data) {
+                out.write(line + "\n");
+            }
+            out.end();
+
             console.log(`Done! See ${options.output}`)
         }
     })

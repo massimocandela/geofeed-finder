@@ -177,24 +177,32 @@ export default class Finder {
 
     setGeofeedPriority = (geofeeds) => {
 
+        console.log("Validating prefixes ownership");
         const sortedByLessSpecificInetnum = geofeeds
             .sort((a, b) => {
                 return ipUtils.sortByPrefixLength(a.inetnum, b.inetnum);
             });
 
+        for (let item of sortedByLessSpecificInetnum) {
+            item.af = ipUtils.getAddressFamily(item.prefix);
+            const [ip, bits] = ipUtils.getIpAndCidr(item.prefix);
+            item.binary = ipUtils._applyNetmask(ip, bits, item.af);
+            item.bits = bits;
+            item.ip = ip;
+        }
+
         for (let n=1; n<sortedByLessSpecificInetnum.length; n++) {
             const moreSpecificInetnum = sortedByLessSpecificInetnum[n];
-            const moreSpecificInetnumPrefix = moreSpecificInetnum.prefix;
 
             for (let i=0; i<n; i++) { // For all the less specifics already visited
                 const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
-                const lessSpecificInetnumPrefix = lessSpecificInetnum.prefix;
 
                 // If there is a less specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
                 if (lessSpecificInetnum.valid &&
-                    (ipUtils.isEqualPrefix(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix) ||
-                        ipUtils.isSubnet(moreSpecificInetnumPrefix, lessSpecificInetnumPrefix))) {
+                    moreSpecificInetnum.af === lessSpecificInetnum.af &&
+                    ((moreSpecificInetnum.bits === lessSpecificInetnum.bits && ipUtils._isEqualIP(moreSpecificInetnum.ip, lessSpecificInetnum.ip, moreSpecificInetnum.af)) ||
+                        (ipUtils.isSubnetBinary(moreSpecificInetnum.binary, lessSpecificInetnum.binary)))) {
                     lessSpecificInetnum.valid = false;
                 }
             }
@@ -258,7 +266,7 @@ export default class Finder {
                 .then(objects => [].concat.apply([], (objects || []).map(this.translateObject)))
                 .then(this.getMostUpdatedInetnums)
                 .then(this.getGeofeedsFiles)
-                .then(this.setGeofeedPriority)
+                .then(this.setGeofeedPriority);
         }
     };
 
