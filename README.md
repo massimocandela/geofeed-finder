@@ -59,18 +59,22 @@ import GeofeedFinder from "geofeed-finder";
 Use it:
 
 ```js
-
 const options = {
-    include: ["ripe", "apnic"] // The sources to explore (default: ripe, apnic, lacnic, afrinic, arin)
+    include: ["ripe", "apnic"], // The RIRs to explore (default: ripe, apnic, lacnic, afrinic, arin),
+    defaultCacheDays: 7, // Cache days for geofeed files without cache headers set (default: 7)
+    includeZip: true | false, // Allow for zip codes in the final output (default: false)
+    silent: true | false, // Don't log in console (default: false)
+    keepNonIso: true | false, // Don't validate ISO codes (default: false)
+    output: "result.csv", // Output file (default: "result.csv")
+    downloadTimeout: 5 // Interrupt downloading a geofeed file after seconds (default: 10)
 };
 
-new GeofeedFinder(options)
+new GeofeedFinder(options) // The options dict is optional, you can just do new GeofeedFinder()
     .getGeofeeds()
     .then(geofeeds => { 
         // Do something with the geofeeds 
         // An array of objects { prefix, country, region, city }
     });
-
 ```
 
 
