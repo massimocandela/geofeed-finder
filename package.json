@@ -65,7 +65,7 @@
       "./src/dataset/*.json"
     ],
     "targets": [
-      "node12"
+      "node14"
     ]
   },
   "release-it": {
