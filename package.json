@@ -51,7 +51,7 @@
     "bulk-whois-parser": "^1.1.1",
     "cli-progress": "^3.10.0",
     "csv-parse": "^5.0.4",
-    "geofeed-validator": "^1.0.4",
+    "geofeed-validator": "^1.1.0",
     "ip-address": "^8.1.0",
     "ip-sub": "^1.2.1",
     "md5": "^2.3.0",
