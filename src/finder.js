@@ -112,13 +112,6 @@ export default class Finder {
                 method: 'GET'
             })
                 .then(response => {
-                    if (response.headers['content-type'].includes("text/html")) {
-                        throw new Error("text/html is not a valid content type.");
-                    }
-
-                    return response;
-                })
-                .then(response => {
                     fs.writeFileSync(cachedFile, response.data);
                     this._setGeofeedCacheHeaders(response, cachedFile);
                     return response.data;
