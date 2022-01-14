@@ -48,7 +48,7 @@
   "dependencies": {
     "axios": "^0.24.0",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.1.1",
+    "bulk-whois-parser": "^1.1.2",
     "cli-progress": "^3.10.0",
     "csv-parse": "^5.0.4",
     "geofeed-validator": "^1.1.0",
