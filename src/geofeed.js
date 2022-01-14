@@ -5,10 +5,10 @@ export default class Geofeed {
     constructor(inetnum, prefix, country, region, city, zip) {
         this.inetnum = inetnum.toLowerCase();
         this.prefix = ipUtils.toPrefix(prefix);
-        this.country = country ? country.toUpperCase() : null;
-        this.region = region ? region.toUpperCase() : null;
-        this.zip = zip || null;
-        this.city = city;
+        this.country = country ? country.toUpperCase().slice(0, 3) : null;
+        this.region = region ? region.toUpperCase().slice(0, 7) : null;
+        this.zip = zip ? zip.slice(20) : null;
+        this.city = city ? city.slice(0, 100) : null;
         this.valid = true;
     };
 

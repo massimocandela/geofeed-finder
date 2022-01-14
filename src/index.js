@@ -38,6 +38,10 @@ const params = yargs
             .nargs('k', 0)
             .describe('k', 'Keep entries with invalid ISO codes')
 
+            .alias('d', 'download-timeout')
+            .nargs('d', 1)
+            .describe('d', "Interrupt downloading a geofeed file after seconds")
+
             .alias('i', 'include')
             .nargs('i', 1)
             .default('i', 'ripe,apnic,lacnic,afrinic,arin')
@@ -57,6 +61,7 @@ const options = {
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
+    downloadTimeout: params.d || 10
 };
 
 new Finder(options)

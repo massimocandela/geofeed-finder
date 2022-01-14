@@ -108,15 +108,23 @@ export default class Finder {
             console.log(block.inetnum, file, "[download]");
             this.downloadsOngoing[cachedFile] = axios({
                 url: file,
-                method: 'GET',
+                timeout: parseInt(this.params.downloadTimeout) * 1000,
+                method: 'GET'
             })
+                .then(response => {
+                    if (response.headers['content-type'].includes("text/html")) {
+                        throw new Error("text/html is not a valid content type.");
+                    }
+
+                    return response;
+                })
                 .then(response => {
                     fs.writeFileSync(cachedFile, response.data);
                     this._setGeofeedCacheHeaders(response, cachedFile);
                     return response.data;
                 })
                 .catch(error => {
-                    console.log("error", file, error.code || error.response.status);
+                    console.log("error", file, error.code || (error.response || {}).status || error.message);
                     return null;
                 });
 
