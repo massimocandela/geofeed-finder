@@ -43,7 +43,7 @@
     "@babel/preset-env": "^7.16.8",
     "dotenv-cli": "^4.1.1",
     "pkg": "^5.5.2",
-    "release-it": "^14.12.1"
+    "release-it": "^14.12.3"
   },
   "dependencies": {
     "axios": "^0.24.0",
