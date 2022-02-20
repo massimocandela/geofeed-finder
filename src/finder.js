@@ -30,8 +30,12 @@ export default class Finder {
 
     filterFunction = (inetnum) => {
 
-        if (inetnum.remarks && inetnum.remarks.length > 0 ) {
-            return inetnum.remarks.some(i => i.startsWith("Geofeed"));
+        if (inetnum.geofeed) {
+            return true;
+        }
+
+        if (inetnum?.remarks?.length > 0) {
+            return inetnum.remarks.some(i => i.toLowerCase().startsWith("geofeed"));
         }
 
         return false;
@@ -39,7 +43,7 @@ export default class Finder {
 
     getBlocks = () => {
         return this.whois
-            .getObjects(["inetnum", "inet6num"], this.filterFunction,  ["inetnum", "inet6num", "remarks", "last-updated"])
+            .getObjects(["inetnum", "inet6num"], this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
             .then(blocks => {
                 return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
             })
@@ -94,18 +98,22 @@ export default class Finder {
         fs.writeFileSync(this.cacheHeadersIndexFileName, JSON.stringify(this.cacheHeadersIndex));
     };
 
+    logEntry = (inetnum, file, cache) => {
+        console.log("inetnum:", inetnum, file, cache ? "[cache]" : "[download]");
+    };
+
     _getGeofeedFile = (block) => {
         const file = block.geofeed;
         const cachedFile = this._getFileName(file);
 
         if (this._isCachedGeofeedValid(cachedFile)) {
-            console.log(block.inetnum, file, "[cache]");
+            this.logEntry(block.inetnum, file, true);
             return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
         } if (this.downloadsOngoing[cachedFile]) {
-            console.log(block.inetnum, file, "[cache]");
+            this.logEntry(block.inetnum, file, true);
             return Promise.resolve(this.downloadsOngoing[cachedFile]);
         } else {
-            console.log(block.inetnum, file, "[download]");
+            this.logEntry(block.inetnum, file, false);
             this.downloadsOngoing[cachedFile] = axios({
                 url: file,
                 timeout: parseInt(this.params.downloadTimeout) * 1000,
@@ -218,9 +226,9 @@ export default class Finder {
     };
 
     translateObject = (object) => {
-
         let inetnum = object.inetnum || object.inet6num;
         let remarks = object.remarks;
+        let geofeedField = object?.geofeed?.length ? this.matchGeofeedFile(object.geofeed).pop() : null;
 
         let inetnums = [inetnum];
         if (!inetnum.includes("/")) {
@@ -229,9 +237,14 @@ export default class Finder {
         }
 
         const lastUpdate = moment(object["last-updated"]);
+        const remark = remarks.filter(i => i.toLowerCase().startsWith("geofeed"))[0];
 
-        const remark = remarks.filter(i => i.startsWith("Geofeed"))[0];
-        const geofeed = (remark) ? this.matchGeofeedFile(remark).pop() : null;
+        let geofeed = null;
+        if (geofeedField) {
+            geofeed = geofeedField;
+        } else if (remark){
+            geofeed = this.matchGeofeedFile(remark).pop();
+        }
 
         return inetnums
             .map(inetnum => {
@@ -246,16 +259,29 @@ export default class Finder {
 
     getGeofeeds = () => {
         if (this.params.test) {
-            return this.getInetnum(this.params.test.split("/")[0])
+            const prefix = ipUtils.toPrefix(this.params.test?.trim());
+
+            return this.getInetnum(prefix.split("/")[0])
                 .then(answer => {
-                    const urls = answer.split("\n")
-                        .filter(i => i.includes("Geofeed"))
+                    const items = answer.split("\n").map(i => i.toLowerCase());
+                    const inetnumsLines = items.filter(i => i.startsWith("inetnum") || i.startsWith("netrange"));
+                    const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
+
+                    let inetnum = range.trim();
+                    if (!range.includes("/")) {
+                        const [start, stop] = range.split("-").map(i => i.trim());
+                        const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isSubnet(inetnum, prefix));
+                        inetnum = inetnums[0] || null;
+                    }
+
+                    const urls = items
+                        .filter(i => i.includes("geofeed"))
                         .map(this.matchGeofeedFile);
 
                     return [].concat.apply([], urls)
                         .map(geofeed => {
                             return {
-                                inetnum: this.params.test.trim(),
+                                inetnum,
                                 geofeed,
                                 lastUpdate: moment() // It doesn't matter in this case
                             };
@@ -283,9 +309,10 @@ export default class Finder {
         });
     }
 
-    getInetnum = (prefix) =>
-        this._whois(prefix)
+    getInetnum = (prefix) => {
+        return this._whois(prefix)
             .then(list => {
                 return list.map(i => i.data).join("\n")
             });
+    }
 }
