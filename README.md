@@ -6,11 +6,11 @@ To use the compiled version (linux, mac, windows), see [releases](https://github
 
 Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
-The utility automatically manages the cache and the validation of the ISO codes.
+The utility automatically validates ownership of prefixes, manages the cache, and validates the ISO codes.
 
 ### Usage Example
 
-#### If you created a link to geofeeds in whois data and you want to test that everything is fine
+#### If you just added a geofeed link in your inetnum/NetRange and you want to test that everything is fine:
 
 * Run the binary `./geofeed-finder-linux-x64 -t YOUR_PREFIX`
 
