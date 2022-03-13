@@ -16,5 +16,7 @@ npm run compile
 
 ./node_modules/.bin/pkg ./package.json --targets node14-macos-x64 --output bin/geofeed-finder-macos-x64 --loglevel=error
 
+./node_modules/.bin/pkg ./package.json --targets node14-macos-arm64 --output bin/geofeed-finder-macos-arm64 --loglevel=error
+
 echo "--> Geofeed finder compiled in bin/"
 
