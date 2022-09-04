@@ -14,6 +14,8 @@ The utility automatically validates ownership of prefixes, manages the cache, an
 
 * Run the binary `./geofeed-finder-linux-x64 -t YOUR_PREFIX`
 
+> The -t option is not a prefix to geolocation lookup mechanism, but a test that your geofeed file is linked and constructed properly. This command will (1) find the parent inetnum for your prefix; (2) return all the geofeeds available for it; and (3) validate CSV format and ISO codes and report errors.
+
 #### If you want to retrieve all the geofeeds in a RIR:
 
 * Run the binary `./geofeed-finder-linux-x64 -i ripe`
