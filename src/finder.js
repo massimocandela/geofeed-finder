@@ -26,16 +26,21 @@ export default class Finder {
             repos: this.connectors,
             userAgent: "geofeed-finder"
         });
+
+        this.urlRegex = /\bhttps?:\/\/\S+/gi;
+        this.geofeedRegex = /^Geofeed https?:\/\/\S+/gi;
     };
+
+
 
     filterFunction = (inetnum) => {
 
-        if (inetnum.geofeed) {
+        if (inetnum.geofeed && this.urlRegex.test(inetnum.geofeed)) {
             return true;
         }
 
         if (inetnum?.remarks?.length > 0) {
-            return inetnum.remarks.some(i => i.toLowerCase().startsWith("geofeed"));
+            return inetnum.remarks.some(this.testGeofeedRemark);
         }
 
         return false;
@@ -108,6 +113,7 @@ export default class Finder {
 
         if (this._isCachedGeofeedValid(cachedFile)) {
             this.logEntry(block.inetnum, file, true);
+
             return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
         } if (this.downloadsOngoing[cachedFile]) {
             this.logEntry(block.inetnum, file, true);
@@ -221,8 +227,12 @@ export default class Finder {
         return sortedByLessSpecificInetnum.filter(i => i.valid);
     };
 
+    testGeofeedRemark = (remark) => {
+        return this.geofeedRegex.test(remark);
+    };
+
     matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi) || [];
+        return remark.match(this.urlRegex) || [];
     };
 
     translateObject = (object) => {
