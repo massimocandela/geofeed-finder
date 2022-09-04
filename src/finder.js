@@ -274,13 +274,13 @@ export default class Finder {
             return this.getInetnum(prefix.split("/")[0])
                 .then(answer => {
                     const items = answer.split("\n").map(i => i.toLowerCase());
-                    const inetnumsLines = items.filter(i => i.startsWith("inetnum") || i.startsWith("netrange"));
+                    const inetnumsLines = items.filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
                     const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
                     let inetnum = range.trim();
                     if (!range.includes("/")) {
                         const [start, stop] = range.split("-").map(i => i.trim());
-                        const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isSubnet(inetnum, prefix));
+                        const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
                         inetnum = inetnums[0] || null;
                     }
 
