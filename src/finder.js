@@ -35,7 +35,7 @@ export default class Finder {
 
     filterFunction = (inetnum) => {
 
-        if (inetnum.geofeed && this.urlRegex.test(inetnum.geofeed)) {
+        if (inetnum.geofeed && this.matchGeofeedFile(inetnum.geofeed).length) {
             return true;
         }
 
@@ -228,11 +228,11 @@ export default class Finder {
     };
 
     testGeofeedRemark = (remark) => {
-        return this.geofeedRegex.test(remark);
+        return /^Geofeed https?:\/\/\S+/gi.test(remark);
     };
 
     matchGeofeedFile = (remark) => {
-        return remark.match(this.urlRegex) || [];
+        return remark.match(/\bhttps?:\/\/\S+/gi) || [];
     };
 
     translateObject = (object) => {
