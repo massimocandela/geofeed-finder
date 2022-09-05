@@ -26,9 +26,6 @@ export default class Finder {
             repos: this.connectors,
             userAgent: "geofeed-finder"
         });
-
-        this.urlRegex = /\bhttps?:\/\/\S+/gi;
-        this.geofeedRegex = /^Geofeed https?:\/\/\S+/gi;
     };
 
 
