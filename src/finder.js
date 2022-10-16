@@ -236,9 +236,13 @@ export default class Finder {
     };
 
     testGeofeedRemark = (remark) => {
-        // return /^Geofeed:?\s+https?:\/\/\S+/gi.test(remark);
-        return /^Geofeed https?:\/\/\S+/gi.test(remark);
+        return /^Geofeed:?\s+https?:\/\/\S+/gi.test(remark);
     };
+
+    testGeofeedRemarkStrict = (remark) => {
+        return /\sGeofeed https?:\/\/\S+/g.test(remark);
+    };
+
 
     matchGeofeedFile = (remark) => {
         return remark.match(/\bhttps?:\/\/\S+/gi) || [];
@@ -278,7 +282,11 @@ export default class Finder {
 
     getGeofeeds = () => {
         if (this.params.test) {
-            const prefix = ipUtils.toPrefix(this.params.test?.trim());
+            const prefix = ipUtils.toPrefix(this.params?.test?.toString().trim());
+
+            if (!ipUtils.isValidPrefix(prefix) && !ipUtils.isValidIP(prefix)) {
+                throw new Error("The input must be an IP or a prefix");
+            }
 
             return this.getInetnum(prefix.split("/")[0])
                 .then(answer => {
@@ -293,9 +301,21 @@ export default class Finder {
                         inetnum = inetnums[0] || null;
                     }
 
+
+
                     const urls = items
-                        .filter(i => i.includes("geofeed"))
-                        .map(this.matchGeofeedFile);
+                        .filter(i => i.toLowerCase().includes("geofeed"))
+                        .map(remark => {
+                            const geofeedFile = this.matchGeofeedFile(remark);
+
+                            if (geofeedFile &&
+                                (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
+                                !this.testGeofeedRemarkStrict(remark)) {
+                                console.log(`Error: the remark MUST be in the format: Geofeed https://${geofeedFile[0].replace('"', "")}. Uppercase G, no colon, no quotes, and one space.`);
+                            }
+
+                            return geofeedFile;
+                        });
 
                     return [].concat.apply([], urls)
                         .map(geofeed => {
