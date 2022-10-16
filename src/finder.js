@@ -171,7 +171,17 @@ export default class Finder {
         return geofeeds
             .filter(geofeed => !!geofeed.inetnum && !!geofeed.prefix)
             .filter(geofeed => {
-                const errors = geofeed.validate();
+                let errors = geofeed.validate();
+
+                if (this.params.keepInvalidSubdivisions || this.params.removeInvalidSubdivisions) {
+                    const noSubErrors = errors.filter(i => !i.includes("Not valid Subdivision Code") && !i.includes("The Subdivision is not inside the Country"));
+
+                    if (this.params.removeInvalidSubdivisions && noSubErrors.length !== errors.length) {
+                        geofeed.region = null; // If there is an error in the region and removeInvalidSubdivisions=true, remove the region
+                    }
+
+                    errors = noSubErrors; // Ignore subdivision errors.
+                }
 
                 if (errors.length > 0) {
                     this.logger.log(`${geofeed} ${errors.join(", ")}`);

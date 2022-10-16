@@ -42,6 +42,14 @@ const params = yargs
             .nargs('s', 0)
             .describe('s', "Silent mode, don't print errors")
 
+            .alias('u', 'keep-invalid-subdivisions')
+            .nargs('u', 0)
+            .describe('u', "Keep invalid subdivisions (accept invalid ISO regions/subdivisions)")
+
+            .alias('r', 'remove-invalid-subdivisions')
+            .nargs('r', 0)
+            .describe('r', "Remove invalid subdivisions but keep the rest of the geofeed if valid")
+
             .alias('b', 'arin-bulk')
             .nargs('b', 0)
             .describe('b', 'Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/')
@@ -75,6 +83,8 @@ const options = {
     includeZip: params.z || false,
     silent: params.s || false,
     keepNonIso: params.k || false,
+    keepInvalidSubdivisions: params.u || false,
+    removeInvalidSubdivisions: params.r || false,
     include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
