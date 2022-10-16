@@ -11,6 +11,7 @@ import webWhois from "whois";
 export default class Finder {
     constructor(params) {
         this.params = params || {};
+        this.logger = this.params.logger;
         this.cacheDir = this.params.cacheDir || ".cache/";
         this.csvParser = new CsvParser();
         this.downloadsOngoing = {};
@@ -49,7 +50,9 @@ export default class Finder {
             .then(blocks => {
                 return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
             })
-            .catch(console.log);
+            .catch(error => {
+                this.logger.log(error);
+            });
     };
 
     _getFileName = (file) => {
@@ -101,7 +104,7 @@ export default class Finder {
     };
 
     logEntry = (inetnum, file, cache) => {
-        console.log("inetnum:", inetnum, file, cache ? "[cache]" : "[download]");
+        console.log(`inetnum: ${inetnum} ${file} ${cache ? "[cache]" : "[download]"}`);
     };
 
     _getGeofeedFile = (block) => {
@@ -123,12 +126,19 @@ export default class Finder {
                 method: 'GET'
             })
                 .then(response => {
-                    fs.writeFileSync(cachedFile, response.data);
-                    this._setGeofeedCacheHeaders(response, cachedFile);
-                    return response.data;
+                    const data = response.data;
+                    if (/<a|<div|<span|<style|<link/gi.test(data)) {
+                        const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
+                        this.logger.log(message);
+                        console.log(message);
+                    } else {
+                        fs.writeFileSync(cachedFile, data);
+                        this._setGeofeedCacheHeaders(response, cachedFile);
+                        return data;
+                    }
                 })
                 .catch(error => {
-                    console.log("error", file, error.code || (error.response || {}).status || error.message);
+                    this.logger.log(`Error: ${file} ${error}`);
                     return null;
                 });
 
@@ -159,11 +169,12 @@ export default class Finder {
 
     validateGeofeeds = (geofeeds) => {
         return geofeeds
+            .filter(geofeed => !!geofeed.inetnum && !!geofeed.prefix)
             .filter(geofeed => {
                 const errors = geofeed.validate();
 
                 if (errors.length > 0) {
-                    console.log(`Error: ${geofeed} ${errors.join(", ")}`);
+                    this.logger.log(`${geofeed} ${errors.join(", ")}`);
                 }
 
                 if (this.params.keepNonIso || errors.length === 0) {
@@ -225,6 +236,7 @@ export default class Finder {
     };
 
     testGeofeedRemark = (remark) => {
+        // return /^Geofeed:?\s+https?:\/\/\S+/gi.test(remark);
         return /^Geofeed https?:\/\/\S+/gi.test(remark);
     };
 
@@ -270,8 +282,8 @@ export default class Finder {
 
             return this.getInetnum(prefix.split("/")[0])
                 .then(answer => {
-                    const items = answer.split("\n").map(i => i.toLowerCase());
-                    const inetnumsLines = items.filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
+                    const items = answer.split("\n");
+                    const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
                     const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
                     let inetnum = range.trim();

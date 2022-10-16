@@ -8,3 +8,4 @@ logs/
 .cache/
 result.csv
 .env
+logs/

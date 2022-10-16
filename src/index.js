@@ -4,6 +4,22 @@ import yargs from 'yargs';
 
 const toGeofeed = (geofeedsObjects) => geofeedsObjects.join("\n");
 
+import FileLogger from 'fast-file-logger';
+
+const logger = new FileLogger({
+    logRotatePattern: "YYYY-MM-DD",
+    filename: 'error-%DATE%.log',
+    symLink: false,
+    directory: "./logs",
+    maxRetainedFiles: 100,
+    maxFileSizeMB: 100,
+    compressOnRotation: false,
+    label: "geofeed-finder",
+    useUTC: true,
+    format: ({data, timestamp}) => `${timestamp} ${data}`
+});
+
+
 const params = yargs
     .usage('Usage: $0 <command> [options]')
 
@@ -53,6 +69,7 @@ const params = yargs
     .argv;
 
 const options = {
+    logger,
     defaultCacheDays: 7,
     arinBulk: params.b,
     includeZip: params.z || false,
@@ -68,7 +85,11 @@ new Finder(options)
     .getGeofeeds()
     .then(data => {
         if (!!options.test) {
-            console.log(toGeofeed(data));
+            if (/<a|<div|<span|<style|<link/gi.test(data)) {
+               console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
+            } else {
+                console.log(toGeofeed(data));
+            }
         } else {
 
             fs.writeFileSync(options.output, "");
@@ -84,4 +105,6 @@ new Finder(options)
             console.log(`Done! See ${options.output}`)
         }
     })
-    .catch(error => console.log(error.message));
+    .catch(error => {
+        logger.log(error.message)
+    });
