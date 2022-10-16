@@ -42,7 +42,7 @@ The application accepts the following parameters:
 |-t| Test specific inetnum using RDAP | 
 |-s| Silent mode, don't print errors | 
 |-k| Keep entries with invalid ISO codes | 
-|-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions) | 
+|-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest) | 
 |-r| Remove invalid subdivisions but keep the rest of the geofeed if valid | 
 |-z| Include Zip codes. Zip codes are deprecated in geofeed and by default are excluded from the output | 
 |-d| Download timeout. Interrupt downloading a geofeed file after seconds | 
