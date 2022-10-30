@@ -1,5 +1,5 @@
 import Geofeed from "./geofeed";
-import { parse } from 'csv-parse/sync';
+import parse from 'csv-parse/lib/sync';
 
 export default class CsvParser {
 
@@ -19,10 +19,11 @@ export default class CsvParser {
                 skip_records_with_error: true,
             });
 
-            for (let line of lines) {
+            for (let line of lines ?? []) {
                 out.push(new Geofeed(inetnum, line.prefix, line.country, line.region, line.city, line.zip));
             }
         }
+
         return out;
     }
 }

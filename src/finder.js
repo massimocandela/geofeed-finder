@@ -208,13 +208,11 @@ export default class Finder {
         return Object.values(index);
     };
 
-    setGeofeedPriority = (geofeeds) => {
+    setGeofeedPriority = (geofeeds=[]) => {
 
         console.log("Validating prefixes ownership");
         const sortedByLessSpecificInetnum = geofeeds
-            .sort((a, b) => {
-                return ipUtils.sortByPrefixLength(a.inetnum, b.inetnum);
-            });
+            .sort((a, b) => ipUtils.sortByPrefixLength(a.inetnum, b.inetnum));
 
         for (let item of sortedByLessSpecificInetnum) {
             item.af = ipUtils.getAddressFamily(item.prefix);
@@ -227,10 +225,10 @@ export default class Finder {
         for (let n=1; n<sortedByLessSpecificInetnum.length; n++) {
             const moreSpecificInetnum = sortedByLessSpecificInetnum[n];
 
-            for (let i=0; i<n; i++) { // For all the less specifics already visited
+            for (let i=0; i<n; i++) { // For all the less-specifics already visited
                 const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
 
-                // If there is a less specific inetnum contradicting a more specific inetnum
+                // If there is a less-specific inetnum contradicting a more specific inetnum
                 // Contradicting here means, the less specific is declaring something in the more specific range
                 if (lessSpecificInetnum.valid &&
                     moreSpecificInetnum.af === lessSpecificInetnum.af &&
@@ -310,8 +308,6 @@ export default class Finder {
                         const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
                         inetnum = inetnums[0] || null;
                     }
-
-
 
                     const urls = items
                         .filter(i => i.toLowerCase().includes("geofeed"))

@@ -43,6 +43,9 @@ If you have such authorization, soon there will be an option to use ARIN bulk da
 
 > Run ./geofeed-finder-linux-x64 -h for more options
 
+### Logs
+
+All the logs, including ISO codes error are reported in `logs/`.
 
 ### Use geofeed-finder in your code
 

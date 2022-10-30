@@ -107,7 +107,7 @@ new Finder(options)
                 flags: 'a'
             });
 
-            for (let line of data) {
+            for (let line of data ?? []) {
                 out.write(line + "\n");
             }
             out.end();
