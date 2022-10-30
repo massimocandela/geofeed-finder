@@ -32,7 +32,22 @@ You can select multiple RIRs: `./geofeed-finder-linux-x64 -i ripe,apnic`
 The final geofeed file is a file containing all the geofeeds discovered in whois data.
 Each entry is a prefix or IP which has been selected according to the draft (e.g. accepted only if contained by parent inetnum, priority to longest prefix match, etc.)
 
-To skip the ISO code validation, use the option `-k`. Use `-h` for more options.
+The application accepts the following parameters:
+
+| Parameter| Description  |
+|-|-|
+|-i| Include RIRs (comma-separated list)| 
+|-v| Show version number| 
+|-o| Output file | 
+|-t| Test specific inetnum using RDAP | 
+|-s| Silent mode, don't print errors | 
+|-k| Keep entries with invalid ISO codes | 
+|-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest) | 
+|-r| Remove invalid subdivisions but keep the rest of the geofeed if valid | 
+|-z| Include Zip codes. Zip codes are deprecated in geofeed and by default are excluded from the output | 
+|-d| Download timeout. Interrupt downloading a geofeed file after seconds | 
+
+Use `-h` for more options.
 
 
 Downloading data from ARIN whois takes longer. 
@@ -70,6 +85,9 @@ const options = {
     includeZip: true | false, // Allow for zip codes in the final output (default: false)
     silent: true | false, // Don't log in console (default: false)
     keepNonIso: true | false, // Don't validate ISO codes (default: false)
+    keepInvalidSubdivisions: true | false, // Don't validate ISO codes of the subdivisions (default: false)
+    removeInvalidSubdivisions: true | false, // Remove invalid subdivisions but keep the rest of the geofeed if valid (default: false)
+    test: "ip/prefix", // Test specific ip/prefix using RDAP
     output: "result.csv", // Output file (default: "result.csv")
     downloadTimeout: 5 // Interrupt downloading a geofeed file after seconds (default: 10)
 };
