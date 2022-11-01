@@ -1,5 +1,4 @@
 import Geofeed from "./geofeed";
-import parse from 'csv-parse/lib/sync';
 
 export default class CsvParser {
 
@@ -8,19 +7,12 @@ export default class CsvParser {
 
         if (content) {
 
-            const lines = parse(content, {
-                columns: ["prefix", "country", "region", "city", "zip"],
-                delimiter: ',',
-                comment: "#",
-                trim: true,
-                relax_column_count: true,
-                relax_column_count_less: true,
-                skip_empty_lines: true,
-                skip_records_with_error: true,
-            });
+            const lines = content.split(/\r?\n/).filter(i => !!i && !i.startsWith("#") && i.trim() !== "");
 
-            for (let line of lines ?? []) {
-                out.push(new Geofeed(inetnum, line.prefix, line.country, line.region, line.city, line.zip));
+            for (let l of lines ?? []) {
+                const [prefix, country, region, city, zip] = l.split(",").map(i => i.trim());
+
+                out.push(new Geofeed(inetnum, prefix, country, region, city, zip));
             }
         }
 
