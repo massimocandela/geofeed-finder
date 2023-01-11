@@ -1,6 +1,7 @@
 import batchPromises from "batch-promises";
 import axios from "axios";
 import WhoisParser from "bulk-whois-parser";
+import LongestPrefixMatch from "longest-prefix-match";
 import CsvParser from "./csvParser";
 import md5 from "md5";
 import fs from "fs";
@@ -208,13 +209,21 @@ export default class Finder {
         return Object.values(index);
     };
 
+    splitTree = (prefixes=[], keySize=4) => {
+        const index = {};
+
+        for (let p of prefixes) {
+            const key = p.binary.slice(0, keySize);
+            index[key] ??= [];
+            index[key].push(p);
+        }
+
+        return Object.values(index);
+    }
+
     setGeofeedPriority = (geofeeds=[]) => {
 
-        console.log("Validating prefixes ownership");
-        const sortedByLessSpecificInetnum = geofeeds
-            .sort((a, b) => ipUtils.sortByPrefixLength(a.inetnum, b.inetnum));
-
-        for (let item of sortedByLessSpecificInetnum) {
+        for (let item of geofeeds) {
             item.af = ipUtils.getAddressFamily(item.prefix);
             const [ip, bits] = ipUtils.getIpAndCidr(item.prefix);
             item.binary = ipUtils._applyNetmask(ip, bits, item.af);
@@ -222,25 +231,48 @@ export default class Finder {
             item.ip = ip;
         }
 
-        for (let n=1; n<sortedByLessSpecificInetnum.length; n++) {
-            const moreSpecificInetnum = sortedByLessSpecificInetnum[n];
+        const v4 = geofeeds.filter(i => i.af === 4);
+        const v6 = geofeeds.filter(i => i.af === 6);
 
-            for (let i=0; i<n; i++) { // For all the less-specifics already visited
-                const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
+        return [
+            ...this.splitTree(v4, 4).map(this._setGeofeedPriority),
+            ...this.splitTree(v6, 8).map(this._setGeofeedPriority)
+        ].flat();
+    }
 
-                // If there is a less-specific inetnum contradicting a more specific inetnum
-                // Contradicting here means, the less specific is declaring something in the more specific range
-                if (lessSpecificInetnum.valid &&
-                    moreSpecificInetnum.af === lessSpecificInetnum.af &&
-                    ((moreSpecificInetnum.bits === lessSpecificInetnum.bits && ipUtils._isEqualIP(moreSpecificInetnum.ip, lessSpecificInetnum.ip, moreSpecificInetnum.af)) ||
-                        (ipUtils.isSubnetBinary(moreSpecificInetnum.binary, lessSpecificInetnum.binary)))) {
-                    lessSpecificInetnum.valid = false;
+    _setGeofeedPriority = (geofeeds=[]) => {
+        const longestPrefixMatch = new LongestPrefixMatch();
+
+        const filterFunction = (geofeeds) => {
+            const sortedByLessSpecificInetnum = geofeeds.sort((a, b) => ipUtils.sortByPrefixLength(a.inetnum, b.inetnum));
+
+            for (let n = 1; n < sortedByLessSpecificInetnum.length; n++) {
+                const moreSpecificInetnum = sortedByLessSpecificInetnum[n];
+
+                for (let i = 0; i < n; i++) { // For all the less-specifics already visited
+                    const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
+
+                    // If there is a less-specific inetnum contradicting a more specific inetnum
+                    // Contradicting here means, the less specific is declaring something in the more specific range
+                    if (lessSpecificInetnum.valid &&
+                        ((moreSpecificInetnum.bits === lessSpecificInetnum.bits && ipUtils._isEqualIP(moreSpecificInetnum.ip, lessSpecificInetnum.ip, moreSpecificInetnum.af)) ||
+                            (ipUtils.isSubnetBinary(moreSpecificInetnum.binary, lessSpecificInetnum.binary)))) {
+                        lessSpecificInetnum.valid = false;
+                    }
                 }
             }
-
         }
 
-        return sortedByLessSpecificInetnum.filter(i => i.valid);
+        for (let g of geofeeds) {
+            longestPrefixMatch.addPrefix(g.inetnum, g);
+        }
+
+        let tmp = [];
+        for (let g of geofeeds) {
+            tmp = tmp.concat(longestPrefixMatch.getMatch(g.prefix, false).filter(i => i.prefix === g.prefix));
+        }
+
+        return tmp
     };
 
     testGeofeedRemark = (remark) => {
