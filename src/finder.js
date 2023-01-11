@@ -157,14 +157,19 @@ export default class Finder {
         })
             .then(() => {
                 this._persistCacheIndex();
-                return [].concat.apply([], out);
+                return out.flat();
             })
             .then(data => {
-                if (!this.params.includeZip) {
-                    data.forEach(i => i.zip = null);
+
+                const index = {};
+                for (let g of data) {
+                    if (!this.params.includeZip) {
+                        g.zip = null;
+                    }
+                    index[`${g.inetnum}-${g.prefix}`] = g;
                 }
 
-                return data;
+                return Object.values(index);
             });
     };
 
@@ -209,19 +214,8 @@ export default class Finder {
         return Object.values(index);
     };
 
-    splitTree = (prefixes=[], keySize=4) => {
-        const index = {};
-
-        for (let p of prefixes) {
-            const key = p.binary.slice(0, keySize);
-            index[key] ??= [];
-            index[key].push(p);
-        }
-
-        return Object.values(index);
-    }
-
     setGeofeedPriority = (geofeeds=[]) => {
+        console.log("Validating prefix ownership");
 
         for (let item of geofeeds) {
             item.af = ipUtils.getAddressFamily(item.prefix);
@@ -235,41 +229,23 @@ export default class Finder {
         const v6 = geofeeds.filter(i => i.af === 6);
 
         return [
-            ...this.splitTree(v4, 4).map(this._setGeofeedPriority),
-            ...this.splitTree(v6, 8).map(this._setGeofeedPriority)
+            ...this._setGeofeedPriority(v4),
+            ...this._setGeofeedPriority(v6)
         ].flat();
     }
 
     _setGeofeedPriority = (geofeeds=[]) => {
         const longestPrefixMatch = new LongestPrefixMatch();
 
-        const filterFunction = (geofeeds) => {
-            const sortedByLessSpecificInetnum = geofeeds.sort((a, b) => ipUtils.sortByPrefixLength(a.inetnum, b.inetnum));
-
-            for (let n = 1; n < sortedByLessSpecificInetnum.length; n++) {
-                const moreSpecificInetnum = sortedByLessSpecificInetnum[n];
-
-                for (let i = 0; i < n; i++) { // For all the less-specifics already visited
-                    const lessSpecificInetnum = sortedByLessSpecificInetnum[i];
-
-                    // If there is a less-specific inetnum contradicting a more specific inetnum
-                    // Contradicting here means, the less specific is declaring something in the more specific range
-                    if (lessSpecificInetnum.valid &&
-                        ((moreSpecificInetnum.bits === lessSpecificInetnum.bits && ipUtils._isEqualIP(moreSpecificInetnum.ip, lessSpecificInetnum.ip, moreSpecificInetnum.af)) ||
-                            (ipUtils.isSubnetBinary(moreSpecificInetnum.binary, lessSpecificInetnum.binary)))) {
-                        lessSpecificInetnum.valid = false;
-                    }
-                }
-            }
-        }
-
+        let tmp = [];
+        const prefixes = {};
         for (let g of geofeeds) {
             longestPrefixMatch.addPrefix(g.inetnum, g);
+            prefixes[g.prefix] = true;
         }
-
-        let tmp = [];
-        for (let g of geofeeds) {
-            tmp = tmp.concat(longestPrefixMatch.getMatch(g.prefix, false).filter(i => i.prefix === g.prefix));
+        const uniquePrefixes = Object.keys(prefixes);
+        for (let prefix of uniquePrefixes) {
+            tmp = tmp.concat(longestPrefixMatch.getMatch(prefix, false).filter(i => i.prefix === prefix));
         }
 
         return tmp
