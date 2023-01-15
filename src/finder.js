@@ -46,8 +46,13 @@ export default class Finder {
     }
 
     getBlocks = () => {
+        const selector = this.params.af
+            .map(i => {
+                return i === 4 ? "inetnum" : "inet6num";
+            });
+
         return this.whois
-            .getObjects(["inetnum", "inet6num"], this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
+            .getObjects(selector, this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
             .then(blocks => {
                 return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
             })
@@ -161,15 +166,14 @@ export default class Finder {
             })
             .then(data => {
 
-                const index = {};
                 for (let g of data) {
                     if (!this.params.includeZip) {
                         g.zip = null;
                     }
-                    index[`${g.inetnum}-${g.prefix}`] = g;
+                    g.af = ipUtils.getAddressFamily(g.prefix);
                 }
 
-                return Object.values(index);
+                return data;
             });
     };
 
@@ -217,38 +221,31 @@ export default class Finder {
     setGeofeedPriority = (geofeeds=[]) => {
         console.log("Validating prefix ownership");
 
-        for (let item of geofeeds) {
-            item.af = ipUtils.getAddressFamily(item.prefix);
-            const [ip, bits] = ipUtils.getIpAndCidr(item.prefix);
-            item.binary = ipUtils._applyNetmask(ip, bits, item.af);
-            item.bits = bits;
-            item.ip = ip;
-        }
-
-        const v4 = geofeeds.filter(i => i.af === 4);
-        const v6 = geofeeds.filter(i => i.af === 6);
+        const v4 = this.params.af.includes(4) ? geofeeds.filter(i => i.af === 4) : [];
+        const v6 = this.params.af.includes(6) ? geofeeds.filter(i => i.af === 6) : [];
 
         return [
             ...this._setGeofeedPriority(v4),
-            ...this._setGeofeedPriority(v6)
+            ...this._setGeofeedPriority(v6),
         ].flat();
     }
 
     _setGeofeedPriority = (geofeeds=[]) => {
         const longestPrefixMatch = new LongestPrefixMatch();
 
-        let tmp = [];
-        const prefixes = {};
-        for (let g of geofeeds) {
-            longestPrefixMatch.addPrefix(g.inetnum, g);
-            prefixes[g.prefix] = true;
-        }
-        const uniquePrefixes = Object.keys(prefixes);
-        for (let prefix of uniquePrefixes) {
-            tmp = tmp.concat(longestPrefixMatch.getMatch(prefix, false).filter(i => i.prefix === prefix));
+        let tmp = {};
+        for (let inetnum of [...new Set(geofeeds.map(i => i.inetnum))]) {
+            longestPrefixMatch.addPrefix(inetnum, inetnum);
         }
 
-        return tmp
+        for (let geofeed of geofeeds) {
+            const inetnum = longestPrefixMatch.getMatch(geofeed.prefix, false);
+            if (inetnum && inetnum.length === 1 && geofeed.inetnum === inetnum[0]) {
+                tmp[geofeed.prefix] = geofeed;
+            }
+        }
+
+        return Object.values(tmp);
     };
 
     testGeofeedRemark = (remark) => {

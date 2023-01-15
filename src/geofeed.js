@@ -9,6 +9,7 @@ function processPrefix (prefix){
 
     return null;
 }
+
 export default class Geofeed {
     constructor(inetnum, prefix, country, region, city, zip) {
         this.inetnum = inetnum.toLowerCase();

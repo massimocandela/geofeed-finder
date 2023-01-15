@@ -29,6 +29,11 @@ const params = yargs
             .nargs('v', 0)
             .describe('v', 'Show version number')
 
+            .alias('a', 'af')
+            .nargs('a', 1)
+            .default('a', '4,6')
+            .describe('a', 'Address family')
+
             .alias('o', 'output')
             .nargs('o', 1)
             .default('o', 'result.csv')
@@ -80,12 +85,13 @@ const options = {
     logger,
     defaultCacheDays: 7,
     arinBulk: params.b,
+    af: params.a.toString().split(",").map(i => parseInt(i)),
     includeZip: params.z || false,
     silent: params.s || false,
     keepNonIso: params.k || false,
     keepInvalidSubdivisions: params.u || false,
     removeInvalidSubdivisions: params.r || false,
-    include: ((params.i) ? params.i : "ripe,apnic,lacnic,afrinic,arin").split(","),
+    include: (params.i ?? "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
     downloadTimeout: params.d || 10
@@ -96,7 +102,7 @@ new Finder(options)
     .then(data => {
         if (!!options.test) {
             if (/<a|<div|<span|<style|<link/gi.test(data)) {
-               console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
+                console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
             } else {
                 console.log(toGeofeed(data));
             }

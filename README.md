@@ -45,7 +45,8 @@ The application accepts the following parameters:
 |-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest) | 
 |-r| Remove invalid subdivisions but keep the rest of the geofeed if valid | 
 |-z| Include Zip codes. Zip codes are deprecated in geofeed and by default are excluded from the output | 
-|-d| Download timeout. Interrupt downloading a geofeed file after seconds | 
+|-d| Download timeout. Interrupt downloading a geofeed file after seconds |
+|-a| A comma-separated list of address families (default: 4,6) |
 
 Use `-h` for more options.
 
@@ -82,6 +83,7 @@ Use it:
 const options = {
     include: ["ripe", "apnic"], // The RIRs to explore (default: ripe, apnic, lacnic, afrinic, arin),
     defaultCacheDays: 7, // Cache days for geofeed files without cache headers set (default: 7)
+    af: [4, 6], // Address family (default, both 4 and 6)
     includeZip: true | false, // Allow for zip codes in the final output (default: false)
     silent: true | false, // Don't log in console (default: false)
     keepNonIso: true | false, // Don't validate ISO codes (default: false)
