@@ -83,7 +83,7 @@ export default class Finder {
             }
         }
 
-        this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(setAge, "seconds");
+        this.cacheHeadersIndex[cachedFile] = this.cacheHeadersIndex[cachedFile] ?? moment(this.startTime).add(setAge, "seconds");
     };
 
     _isCachedGeofeedValid = (cachedFile) => {
