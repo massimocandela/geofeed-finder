@@ -41,6 +41,7 @@ The application accepts the following parameters:
 |-o| Output file | 
 |-t| Test specific inetnum using RDAP | 
 |-s| Silent mode, don't print errors | 
+|-c| Whois cache validity (in days) | 
 |-k| Keep entries with invalid ISO codes | 
 |-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest) | 
 |-r| Remove invalid subdivisions but keep the rest of the geofeed if valid | 

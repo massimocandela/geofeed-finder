@@ -66,7 +66,7 @@ export default class Finder {
     };
 
     _setGeofeedCacheHeaders = (response, cachedFile) => {
-        let setAge = 3600 * 24 * this.params.defaultCacheDays; // 1 week (see draft)
+        let setAge = 3600 * 24 * 7; // 1 week (see draft)
 
         if (response.headers['cache-control']) {
             const maxAge = response.headers['cache-control']

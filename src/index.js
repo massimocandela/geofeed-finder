@@ -43,6 +43,10 @@ const params = yargs
             .nargs('t', 1)
             .describe('t', 'Test specific inetnum using RDAP')
 
+            .alias('c', 'cache')
+            .nargs('c', 3)
+            .describe('c', "Number of days whois cache validity")
+
             .alias('s', 'silent')
             .nargs('s', 0)
             .describe('s', "Silent mode, don't print errors")
@@ -83,7 +87,7 @@ const params = yargs
 
 const options = {
     logger,
-    defaultCacheDays: 7,
+    defaultCacheDays: parseInt(params.c),
     arinBulk: params.b,
     af: params.a.toString().split(",").map(i => parseInt(i)),
     includeZip: params.z || false,
