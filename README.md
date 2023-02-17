@@ -1,14 +1,38 @@
 # geofeed-finder
 
-This utility discovers and retrieves geofeed files from whois data according to [RFC9092](https://datatracker.ietf.org/doc/draft-ietf-opsawg-finding-geofeeds/).
+**This utility discovers and retrieves geofeed files from whois data. Additionally, it validates the ownership of the prefixes, manages the cache, and validates the ISO codes. See [RFC9092](https://datatracker.ietf.org/doc/draft-ietf-opsawg-finding-geofeeds/).**
 
-To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/).
+To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/). Otherwise, you can just download the code and do `npm ci` and `npm run serve` to run it.
 
-Otherwise, you can just download the code and do `npm install` and `npm run serve` to run it.
 
-The utility automatically validates ownership of prefixes, manages the cache, and validates the ISO codes.
 
-### Usage Example
+#### How to setup a geofeed
+Add a remark/comment in your inetnum/NetRange as follows:
+```
+Geofeed https://url_to_geofeed/file.csv
+```
+
+Example of result
+```bash
+$whois 209.212.224.1
+
+NetRange:       209.212.224.0 - 209.212.239.255
+CIDR:           209.212.224.0/20
+NetName:        NTTA-209-212-224
+NetHandle:      NET-209-212-224-0-1
+Parent:         NET209 (NET-209-0-0-0-0)
+NetType:        Direct Allocation
+OriginAS:       AS2914
+Organization:   NTT America, Inc. (NTTAM-1)
+RegDate:        1998-04-17
+Updated:        2020-12-18
+Comment:        Geofeed https://geo.ip.gin.ntt.net/geofeeds/geofeeds.csv
+```
+
+
+
+
+## Geofeed-finder usage examples
 
 #### If you just added a geofeed link in your inetnum/NetRange and you want to test that everything is fine:
 
@@ -58,13 +82,11 @@ Instead, ARIN requires authorization to access bulk whois data.
 If you have such authorization, soon there will be an option to use ARIN bulk data, otherwise rdap is used (default, which doesn't require authorization.)
 
 
-> Run ./geofeed-finder-linux-x64 -h for more options
-
 ### Logs
 
 All the logs, including ISO codes error are reported in `logs/`.
 
-### Use geofeed-finder in your code
+## Use geofeed-finder in your code
 
 Install it:
 
