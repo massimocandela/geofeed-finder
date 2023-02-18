@@ -44,7 +44,8 @@ const params = yargs
             .describe('t', 'Test specific inetnum using RDAP')
 
             .alias('c', 'cache')
-            .nargs('c', 3)
+            .nargs('c', 1)
+            .default('c', 3)
             .describe('c', "Number of days whois cache validity")
 
             .alias('s', 'silent')
