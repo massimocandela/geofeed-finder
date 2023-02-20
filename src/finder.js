@@ -293,58 +293,67 @@ export default class Finder {
             });
     };
 
-    getGeofeeds = () => {
-        if (this.params.test) {
-            const prefix = ipUtils.toPrefix(this.params?.test?.toString().trim());
+    getGeofeedInetnumPairs = () => {
+        try {
+            if (this.params.test) {
+                const prefix = ipUtils.toPrefix(this.params?.test?.toString().trim());
 
-            if (!ipUtils.isValidPrefix(prefix) && !ipUtils.isValidIP(prefix)) {
-                throw new Error("The input must be an IP or a prefix");
+                if (!ipUtils.isValidPrefix(prefix) && !ipUtils.isValidIP(prefix)) {
+                    throw new Error("The input must be an IP or a prefix");
+                }
+
+                return this.getInetnum(prefix.split("/")[0])
+                    .then(answer => {
+                        const items = answer.split("\n");
+                        const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
+                        const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
+
+                        let inetnum = range.trim();
+                        if (!range.includes("/")) {
+                            const [start, stop] = range.split("-").map(i => i.trim());
+                            const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
+                            inetnum = inetnums[0] || null;
+                        }
+
+                        const urls = items
+                            .filter(i => i.toLowerCase().includes("geofeed"))
+                            .map(remark => {
+                                const geofeedFile = this.matchGeofeedFile(remark);
+
+                                if (geofeedFile &&
+                                    (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
+                                    !this.testGeofeedRemarkStrict(remark)) {
+                                    console.log(`Error: the remark MUST be in the format: Geofeed https://${geofeedFile[0].replace('"', "")}. Uppercase G, no colon, no quotes, and one space.`);
+                                }
+
+                                return geofeedFile;
+                            });
+
+                        return urls.flat()
+                            .map(geofeed => {
+                                return {
+                                    inetnum,
+                                    geofeed,
+                                    lastUpdate: moment() // It doesn't matter in this case
+                                };
+                            });
+                    })
+            } else {
+                return this.getBlocks()
+                    .then(objects => [].concat.apply([], (objects || []).map(this.translateObject)))
+                    .then(this.getMostUpdatedInetnums);
             }
-
-            return this.getInetnum(prefix.split("/")[0])
-                .then(answer => {
-                    const items = answer.split("\n");
-                    const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
-                    const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
-
-                    let inetnum = range.trim();
-                    if (!range.includes("/")) {
-                        const [start, stop] = range.split("-").map(i => i.trim());
-                        const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
-                        inetnum = inetnums[0] || null;
-                    }
-
-                    const urls = items
-                        .filter(i => i.toLowerCase().includes("geofeed"))
-                        .map(remark => {
-                            const geofeedFile = this.matchGeofeedFile(remark);
-
-                            if (geofeedFile &&
-                                (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
-                                !this.testGeofeedRemarkStrict(remark)) {
-                                console.log(`Error: the remark MUST be in the format: Geofeed https://${geofeedFile[0].replace('"', "")}. Uppercase G, no colon, no quotes, and one space.`);
-                            }
-
-                            return geofeedFile;
-                        });
-
-                    return [].concat.apply([], urls)
-                        .map(geofeed => {
-                            return {
-                                inetnum,
-                                geofeed,
-                                lastUpdate: moment() // It doesn't matter in this case
-                            };
-                        });
-                })
-                .then(this.getGeofeedsFiles);
-        } else {
-            return this.getBlocks()
-                .then(objects => [].concat.apply([], (objects || []).map(this.translateObject)))
-                .then(this.getMostUpdatedInetnums)
-                .then(this.getGeofeedsFiles)
-                .then(this.setGeofeedPriority);
+        } catch (error) {
+            return Promise.reject(error);
         }
+    }
+
+    getGeofeeds = () => {
+        return this.getGeofeedInetnumPairs()
+            .then(this.getGeofeedsFiles)
+            .then(data => {
+                return this.params.test ? data : this.setGeofeedPriority(data);
+            });
     };
 
     _whois = (prefix, server) => {
