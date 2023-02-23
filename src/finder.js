@@ -87,10 +87,13 @@ export default class Finder {
     };
 
     _isCachedGeofeedValid = (cachedFile) => {
-
-        return fs.existsSync(cachedFile) &&
-            this.cacheHeadersIndex[cachedFile] &&
-            moment(this.cacheHeadersIndex[cachedFile]).isSameOrAfter(this.startTime);
+        if (this.params.test) {
+            return false;
+        } else {
+            return fs.existsSync(cachedFile) &&
+                this.cacheHeadersIndex[cachedFile] &&
+                moment(this.cacheHeadersIndex[cachedFile]).isSameOrAfter(this.startTime);
+        }
     };
 
     _importCacheHeaderIndex = () => {
