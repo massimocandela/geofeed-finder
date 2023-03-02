@@ -141,8 +141,10 @@ export default class Finder {
                         this.logger.log(message);
                         console.log(message);
                     } else {
-                        fs.writeFileSync(cachedFile, data);
-                        this._setGeofeedCacheHeaders(response, cachedFile);
+                        if (!this.params.test) {
+                            fs.writeFileSync(cachedFile, data);
+                            this._setGeofeedCacheHeaders(response, cachedFile);
+                        }
                         return data;
                     }
                 })
