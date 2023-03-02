@@ -26,6 +26,7 @@ export default class Finder {
 
         this.whois = new WhoisParser({
             repos: this.connectors,
+            defaultCacheDays: this.params.whoisCacheDays,
             userAgent: "geofeed-finder"
         });
     };
@@ -66,7 +67,7 @@ export default class Finder {
     };
 
     _setGeofeedCacheHeaders = (response, cachedFile) => {
-        let setAge = 3600 * 24 * 7; // 1 week (see draft)
+        let setAge = 3600 * 24 * this.params.geofeedCacheDays; // 1 week (see draft)
 
         if (response.headers['cache-control']) {
             const maxAge = response.headers['cache-control']

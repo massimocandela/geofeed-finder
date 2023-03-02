@@ -105,7 +105,8 @@ Use it:
 ```js
 const options = {
     include: ["ripe", "apnic"], // The RIRs to explore (default: ripe, apnic, lacnic, afrinic, arin),
-    defaultCacheDays: 7, // Cache days for geofeed files without cache headers set (default: 7)
+    whoisCacheDays: 3, // Cache days for whois data (default: 3)
+    geofeedCacheDays: 7, // Cache days for geofeed files without cache headers set (default: 7)
     af: [4, 6], // Address family (default, both 4 and 6)
     includeZip: true | false, // Allow for zip codes in the final output (default: false)
     silent: true | false, // Don't log in console (default: false)

@@ -43,10 +43,15 @@ const params = yargs
             .nargs('t', 1)
             .describe('t', 'Test specific inetnum using RDAP')
 
-            .alias('c', 'cache')
+            .alias('c', 'cache-whois')
             .nargs('c', 1)
             .default('c', 3)
             .describe('c', "Number of days whois cache validity")
+
+            .alias('g', 'cache-geofeed')
+            .nargs('g', 1)
+            .default('g', 3)
+            .describe('g', "Number of days geofeed file cache validity")
 
             .alias('s', 'silent')
             .nargs('s', 0)
@@ -88,7 +93,8 @@ const params = yargs
 
 const options = {
     logger,
-    defaultCacheDays: parseInt(params.c),
+    whoisCacheDays: parseInt(params.c),
+    geofeedCacheDays: parseInt(params.g),
     arinBulk: params.b,
     af: params.a.toString().split(",").map(i => parseInt(i)),
     includeZip: params.z || false,
