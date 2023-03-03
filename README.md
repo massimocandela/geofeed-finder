@@ -60,19 +60,19 @@ The application accepts the following parameters:
 
 | Parameter| Description  |
 |-|-|
-|-i| Include RIRs (comma-separated list)| 
-|-v| Show version number| 
-|-o| Output file | 
-|-t| Test specific inetnum using RDAP | 
-|-s| Silent mode, don't print errors | 
-|-c| Whois cache validity (in days) | 
-|-g| Geofeed file cache validity (in days) | 
-|-k| Keep entries with invalid ISO codes | 
-|-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest) | 
-|-r| Remove invalid subdivisions but keep the rest of the geofeed if valid | 
-|-z| Include Zip codes. Zip codes are deprecated in geofeed and by default are excluded from the output | 
-|-d| Download timeout. Interrupt downloading a geofeed file after seconds |
-|-a| A comma-separated list of address families (default: 4,6) |
+|-i| Include RIRs (comma-separated list). Possible values are ripe, apnic, lacnic, afrinic, and arin.| 
+|-v| Show version number. | 
+|-o| Output file. | 
+|-t| Test specific inetnum using RDAP. | 
+|-s| Silent mode, don't print errors. | 
+|-c| Whois cache validity (in days). Do not set, use the default instead. | 
+|-g| Geofeed file cache validity (in days). Do not set, use the default instead. | 
+|-k| Keep entries with invalid ISO codes. Not recommended. | 
+|-u| Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest). Not recommended. | 
+|-r| Remove invalid subdivisions but keep the rest of the geofeed if valid.| 
+|-z| Include Zip codes. Not recommended. Zip codes are deprecated in geofeed and by default are excluded from the output. | 
+|-d| Download timeout. Interrupt downloading a geofeed file after seconds. Default: 10 seconds. |
+|-a| A comma-separated list of address families (default: 4,6). |
 
 Use `-h` for more options.
 
@@ -81,6 +81,8 @@ Downloading data from ARIN whois takes longer.
 This is because the other RIRs publicly provide anonymized bulk whois data.
 Instead, ARIN requires authorization to access bulk whois data. 
 If you have such authorization, soon there will be an option to use ARIN bulk data, otherwise rdap is used (default, which doesn't require authorization.)
+
+> WARNING: do not remove the cache at each run and do not set cache vailidity values too small. If you do that, the risk that you get blocked by the data repositories is great.
 
 
 ### Logs
