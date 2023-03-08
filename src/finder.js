@@ -13,7 +13,7 @@ export default class Finder {
     constructor(params) {
         this.params = params || {};
         this.logger = this.params.logger;
-        this.cacheDir = this.params.cacheDir || ".cache/";
+        this.cacheDir = this.params.cacheDir.split("/").filter(i => !!i).join("/") + "/";
         this.csvParser = new CsvParser();
         this.downloadsOngoing = {};
         this.startTime = moment();
@@ -25,6 +25,7 @@ export default class Finder {
             .filter(key => this.params.include.includes(key));
 
         this.whois = new WhoisParser({
+            cacheDir: this.cacheDir,
             repos: this.connectors,
             defaultCacheDays: this.params.whoisCacheDays,
             userAgent: "geofeed-finder"

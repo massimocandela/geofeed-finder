@@ -73,6 +73,7 @@ The application accepts the following parameters:
 |-z| Include Zip codes. Zip codes are deprecated in geofeed and by default are excluded from the output | 
 |-d| Download timeout. Interrupt downloading a geofeed file after seconds |
 |-a| A comma-separated list of address families (default: 4,6) |
+|-l| Cache directory (default: .cache) |
 
 Use `-h` for more options.
 

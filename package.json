@@ -42,13 +42,13 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
     "@babel/preset-env": "^7.20.2",
     "dotenv-cli": "^7.0.0",
-    "pkg": "^5.8.0",
+    "pkg": "^5.8.1",
     "release-it": "^15.7.0"
   },
   "dependencies": {
-    "axios": "=0.26.1",
+    "axios": "=0.27.2",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.1.10",
+    "bulk-whois-parser": "^1.1.11",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
     "geofeed-validator": "^1.2.1",

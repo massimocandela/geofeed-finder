@@ -53,6 +53,11 @@ const params = yargs
             .default('g', 3)
             .describe('g', "Number of days geofeed file cache validity")
 
+            .alias('l', 'cache-location')
+            .nargs('l', 1)
+            .default('l', ".cache/")
+            .describe('l', "Cache directory location")
+
             .alias('s', 'silent')
             .nargs('s', 0)
             .describe('s', "Silent mode, don't print errors")
@@ -93,6 +98,7 @@ const params = yargs
 
 const options = {
     logger,
+    cacheDir: params.l || ".cache/",
     whoisCacheDays: parseInt(params.c),
     geofeedCacheDays: parseInt(params.g),
     arinBulk: params.b,
