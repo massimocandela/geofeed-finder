@@ -11,18 +11,34 @@ import webWhois from "whois";
 
 export default class Finder {
     constructor(params) {
-        this.params = params || {};
+        const defaults = {
+            cacheDir: ".cache/",
+            whoisCacheDays: 3,
+            geofeedCacheDays: 7,
+            af: [4,6],
+            includeZip: false,
+            silent: false,
+            keepNonIso: false,
+            keepInvalidSubdivisions: false,
+            removeInvalidSubdivisions: false,
+            include: ["ripe", "afrinic", "apnic", "arin", "lacnic"],
+            output: "result.csv",
+            test: null,
+            downloadTimeout: 10
+        };
+        this.params = {
+            ...defaults,
+            ...(params ?? {})
+        };
         this.logger = this.params.logger;
         this.cacheDir = this.params.cacheDir.split("/").filter(i => !!i).join("/") + "/";
         this.csvParser = new CsvParser();
-        this.downloadsOngoing = {};
         this.startTime = moment();
 
         this.cacheHeadersIndexFileName = this.cacheDir + "cache-index.json";
         this._importCacheHeaderIndex();
 
-        this.connectors = ["ripe", "afrinic", "apnic", "arin", "lacnic"]
-            .filter(key => this.params.include.includes(key));
+        this.connectors = defaults.include.filter(key => this.params.include.includes(key));
 
         this.whois = new WhoisParser({
             cacheDir: this.cacheDir,
@@ -114,24 +130,20 @@ export default class Finder {
         fs.writeFileSync(this.cacheHeadersIndexFileName, JSON.stringify(this.cacheHeadersIndex));
     };
 
-    logEntry = (inetnum, file, cache) => {
-        console.log(`inetnum: ${inetnum} ${file} ${cache ? "[cache]" : "[download]"}`);
+    logEntry = (file, cache) => {
+        console.log(`${file} ${cache ? "[cache]" : "[download]"}`);
     };
 
-    _getGeofeedFile = (block) => {
-        const file = block.geofeed;
+    _getGeofeedFile = (file) => {
         const cachedFile = this._getFileName(file);
 
         if (this._isCachedGeofeedValid(cachedFile)) {
-            this.logEntry(block.inetnum, file, true);
+            this.logEntry(file, true);
 
             return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
-        } if (this.downloadsOngoing[cachedFile]) {
-            this.logEntry(block.inetnum, file, true);
-            return Promise.resolve(this.downloadsOngoing[cachedFile]);
         } else {
-            this.logEntry(block.inetnum, file, false);
-            this.downloadsOngoing[cachedFile] = axios({
+            this.logEntry(file, false);
+            return axios({
                 url: file,
                 timeout: parseInt(this.params.downloadTimeout) * 1000,
                 method: 'GET'
@@ -155,23 +167,33 @@ export default class Finder {
                     return null;
                 });
 
-            return this.downloadsOngoing[cachedFile];
         }
     };
 
+
+
     getGeofeedsFiles = (blocks) => {
-        const out = []
-        return batchPromises(5, blocks, block => {
-            return this._getGeofeedFile(block)
-                .then(data => {
-                    out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
-                });
-        })
+        const out = [];
+
+        // pre load all files
+        return batchPromises(10, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
             .then(() => {
-                this._persistCacheIndex();
-                return out.flat();
-            })
-            .then(data => {
+
+                for (let block of blocks) {
+                    const cachedFile = this._getFileName(block.geofeed);
+
+                    try {
+                        const data = fs.readFileSync(cachedFile, 'utf8')
+
+                        if (data && data.length) {
+                            out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
+                        }
+                    } catch (error) {
+                        // Nothing - these are files that are not CSV
+                    }
+                }
+
+                const data = out.flat();
 
                 for (let g of data) {
                     if (!this.params.includeZip) {
@@ -201,7 +223,11 @@ export default class Finder {
                 }
 
                 if (errors.length > 0) {
-                    this.logger.log(`${geofeed} ${errors.join(", ")}`);
+                    const message = `${geofeed} ${errors.join(", ")}`;
+                    if (this.params.test) {
+                        console.log(message);
+                    }
+                    this.logger.log(message);
                 }
 
                 if (this.params.keepNonIso || errors.length === 0) {
@@ -300,6 +326,8 @@ export default class Finder {
             });
     };
 
+
+
     getGeofeedInetnumPairs = () => {
         try {
             if (this.params.test) {
@@ -316,11 +344,14 @@ export default class Finder {
                         const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
                         let inetnum = range.trim();
+
                         if (!range.includes("/")) {
                             const [start, stop] = range.split("-").map(i => i.trim());
                             const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
                             inetnum = inetnums[0] || null;
                         }
+
+
 
                         const urls = items
                             .filter(i => i.toLowerCase().includes("geofeed"))
