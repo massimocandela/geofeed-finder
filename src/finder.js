@@ -11,18 +11,34 @@ import webWhois from "whois";
 
 export default class Finder {
     constructor(params) {
-        this.params = params || {};
+        const defaults = {
+            cacheDir: ".cache/",
+            whoisCacheDays: 3,
+            geofeedCacheDays: 7,
+            af: [4,6],
+            includeZip: false,
+            silent: false,
+            keepNonIso: false,
+            keepInvalidSubdivisions: false,
+            removeInvalidSubdivisions: false,
+            include: ["ripe", "afrinic", "apnic", "arin", "lacnic"],
+            output: "result.csv",
+            test: null,
+            downloadTimeout: 10
+        };
+        this.params = {
+            ...defaults,
+            ...(params ?? {})
+        };
         this.logger = this.params.logger;
         this.cacheDir = this.params.cacheDir.split("/").filter(i => !!i).join("/") + "/";
         this.csvParser = new CsvParser();
-        this.downloadsOngoing = {};
         this.startTime = moment();
 
         this.cacheHeadersIndexFileName = this.cacheDir + "cache-index.json";
         this._importCacheHeaderIndex();
 
-        this.connectors = ["ripe", "afrinic", "apnic", "arin", "lacnic"]
-            .filter(key => this.params.include.includes(key));
+        this.connectors = defaults.include.filter(key => this.params.include.includes(key));
 
         this.whois = new WhoisParser({
             cacheDir: this.cacheDir,
@@ -157,13 +173,12 @@ export default class Finder {
 
 
     getGeofeedsFiles = (blocks) => {
-        const out = []
+        const out = [];
 
         // pre load all files
-        return batchPromises(20, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
+        return batchPromises(10, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
             .then(() => {
 
-                console.log(blocks);
                 for (let block of blocks) {
                     const cachedFile = this._getFileName(block.geofeed);
 
@@ -171,11 +186,10 @@ export default class Finder {
                         const data = fs.readFileSync(cachedFile, 'utf8')
 
                         if (data && data.length) {
-                            console.log(`Processing ${block.inetnum}`);
                             out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
                         }
                     } catch (error) {
-                        // Nothing
+                        // Nothing - these are files that are not CSV
                     }
                 }
 
@@ -209,7 +223,11 @@ export default class Finder {
                 }
 
                 if (errors.length > 0) {
-                    this.logger.log(`${geofeed} ${errors.join(", ")}`);
+                    const message = `${geofeed} ${errors.join(", ")}`;
+                    if (this.params.test) {
+                        console.log(message);
+                    }
+                    this.logger.log(message);
                 }
 
                 if (this.params.keepNonIso || errors.length === 0) {
@@ -308,6 +326,8 @@ export default class Finder {
             });
     };
 
+
+
     getGeofeedInetnumPairs = () => {
         try {
             if (this.params.test) {
@@ -323,14 +343,15 @@ export default class Finder {
                         const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
                         const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
-                        console.log(range);
-
                         let inetnum = range.trim();
+
                         if (!range.includes("/")) {
                             const [start, stop] = range.split("-").map(i => i.trim());
                             const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
                             inetnum = inetnums[0] || null;
                         }
+
+
 
                         const urls = items
                             .filter(i => i.toLowerCase().includes("geofeed"))
