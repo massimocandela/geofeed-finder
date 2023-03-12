@@ -361,7 +361,7 @@ export default class Finder {
                                 if (geofeedFile &&
                                     (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
                                     !this.testGeofeedRemarkStrict(remark)) {
-                                    console.log(`Error: the remark MUST be in the format: Geofeed https://${geofeedFile[0].replace('"', "")}. Uppercase G, no colon, no quotes, and one space.`);
+                                    console.log(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
                                 }
 
                                 return geofeedFile;
