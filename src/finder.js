@@ -338,6 +338,7 @@ export default class Finder {
 
                 return this.getInetnum(prefix.split("/")[0])
                     .then(answer => {
+
                         const items = answer.split("\n");
                         const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
                         const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
@@ -395,7 +396,7 @@ export default class Finder {
 
     _whois = (prefix, server) => {
         return new Promise((resolve, reject) => {
-            webWhois.lookup(prefix, { follow: 4, verbose: true }, (error, data) => {
+            webWhois.lookup(prefix, { follow: 4, verbose: true, timeout: 10000, returnPartialOnTimeout: true }, (error, data) => {
                 if (error) {
                     reject(error)
                 } else {

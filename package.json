@@ -57,7 +57,7 @@
     "longest-prefix-match": "^1.2.2",
     "md5": "^2.3.0",
     "moment": "^2.29.4",
-    "whois": "^2.14.0",
+    "whois": "https://gitpkg.now.sh/massimocandela/node-whois?dist",
     "yargs": "^17.7.2"
   },
   "pkg": {
