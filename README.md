@@ -6,7 +6,7 @@ To use the compiled version (linux, mac, windows), see [releases](https://github
 
 
 
-#### How to setup a geofeed
+#### How to set up a geofeed
 Add a remark/comment in your inetnum/NetRange as follows:
 ```
 Geofeed https://url_to_geofeed/file.csv
@@ -73,6 +73,7 @@ The application accepts the following parameters:
 | -z        | Include Zip codes. Not recommended. Zip codes are deprecated in geofeed and by default are excluded from the output. | 
 | -d        | Download timeout. Interrupt downloading a geofeed file after seconds. Default: 10 seconds.                           |
 | -p        | Do not fetch arin sub allocations. You will save considerable time but have a potentially partial output.            |
+| -q        | Detect ARIN's sub allocations locally instead of downloading a dump file.                                            |
 | -a        | A comma-separated list of address families. Default: `4,6`.                                                          |
 | -l        | Cache directory. Default: `.cache`.                                                                                  |
 

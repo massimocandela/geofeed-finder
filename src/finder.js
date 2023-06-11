@@ -27,6 +27,7 @@ export default class Finder {
             downloadTimeout: 10,
             daysWhoisSuballocationsCache: 7, // Cannot be less than this
             skipSuballocations: false,
+            compileSuballocationLocally: false
         };
         this.params = {
             ...defaults,
@@ -48,6 +49,7 @@ export default class Finder {
             daysWhoisSuballocationsCache: this.params.daysWhoisSuballocationsCache,
             skipSuballocations: this.params.skipSuballocations,
             defaultCacheDays: this.params.whoisCacheDays,
+            compileSuballocationLocally: this.params.compileSuballocationLocally,
             userAgent: "geofeed-finder"
         });
     };

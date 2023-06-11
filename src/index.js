@@ -76,8 +76,11 @@ const params = yargs
 
             .alias('p', 'arin-skip-suballocations')
             .nargs('p', 0)
-            .describe('p', 'Do not fetch arin sub allocations. You will save considerable time but have a potentially partial output.')
+            .describe('p', 'Do not fetch ARIN\'s sub allocations. You will save considerable time but have a potentially partial output.')
 
+            .alias('q', 'detect-suballocations-locally')
+            .nargs('q', 0)
+            .describe('q', 'Detect ARIN\'s sub allocations locally instead of downloading a dump file.')
 
             .alias('z', 'include-zip')
             .nargs('z', 0)
@@ -106,6 +109,7 @@ const options = {
     cacheDir: params.l || ".cache/",
     whoisCacheDays: parseInt(params.c),
     daysWhoisSuballocationsCache: 7, // Cannot be less than this
+    compileSuballocationLocally: !!params.q,
     skipSuballocations: !!params.p,
     geofeedCacheDays: parseInt(params.g),
     arinBulk: params.b,
