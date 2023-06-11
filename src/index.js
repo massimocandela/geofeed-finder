@@ -74,6 +74,11 @@ const params = yargs
             .nargs('b', 0)
             .describe('b', 'Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/')
 
+            .alias('p', 'arin-skip-suballocations')
+            .nargs('p', 0)
+            .describe('p', 'Do not fetch arin sub allocations. You will save considerable time but have a potentially partial output.')
+
+
             .alias('z', 'include-zip')
             .nargs('z', 0)
             .describe('z', 'Zip codes are deprecated in geofeed and by default are excluded from the output.')
@@ -100,18 +105,20 @@ const options = {
     logger,
     cacheDir: params.l || ".cache/",
     whoisCacheDays: parseInt(params.c),
+    daysWhoisSuballocationsCache: 7, // Cannot be less than this
+    skipSuballocations: !!params.p,
     geofeedCacheDays: parseInt(params.g),
     arinBulk: params.b,
     af: params.a.toString().split(",").map(i => parseInt(i)),
-    includeZip: params.z || false,
-    silent: params.s || false,
-    keepNonIso: params.k || false,
-    keepInvalidSubdivisions: params.u || false,
-    removeInvalidSubdivisions: params.r || false,
+    includeZip: !!params.z,
+    silent: !!params.s,
+    keepNonIso: !!params.k,
+    keepInvalidSubdivisions: !!params.u,
+    removeInvalidSubdivisions: !!params.r,
     include: (params.i ?? "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
-    downloadTimeout: params.d || 10
+    downloadTimeout: params.d || 10 // 0 is not a valid value
 };
 
 new Finder(options)

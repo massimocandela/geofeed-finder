@@ -24,7 +24,9 @@ export default class Finder {
             include: ["ripe", "afrinic", "apnic", "arin", "lacnic"],
             output: "result.csv",
             test: null,
-            downloadTimeout: 10
+            downloadTimeout: 10,
+            daysWhoisSuballocationsCache: 7, // Cannot be less than this
+            skipSuballocations: false,
         };
         this.params = {
             ...defaults,
@@ -43,6 +45,8 @@ export default class Finder {
         this.whois = new WhoisParser({
             cacheDir: this.cacheDir,
             repos: this.connectors,
+            daysWhoisSuballocationsCache: this.params.daysWhoisSuballocationsCache,
+            skipSuballocations: this.params.skipSuballocations,
             defaultCacheDays: this.params.whoisCacheDays,
             userAgent: "geofeed-finder"
         });
@@ -390,6 +394,7 @@ export default class Finder {
         return this.getGeofeedInetnumPairs()
             .then(this.getGeofeedsFiles)
             .then(data => {
+                this._persistCacheIndex();
                 return this.params.test ? data : this.setGeofeedPriority(data);
             });
     };
