@@ -58,22 +58,23 @@ Each entry is a prefix or IP which has been selected according to the draft (e.g
 
 The application accepts the following parameters:
 
-| Parameter | Description  |
-|-----------|---|
-| -i        | Include RIRs (comma-separated list). Possible values are ripe, apnic, lacnic, afrinic, and arin.| 
-| -v        | Show version number. | 
-| -o        | Output file. | 
-| -t        | Test specific inetnum using RDAP. | 
-| -s        | Silent mode, don't print errors. | 
-| -c        | Whois cache validity (in days). Do not set, use the default instead. | 
-| -g        | Geofeed file cache validity (in days). Do not set, use the default instead. | 
-| -k        | Keep entries with invalid ISO codes. Not recommended. | 
-| -u        | Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest). Not recommended. | 
-| -r        | Remove invalid subdivisions but keep the rest of the geofeed if valid.| 
+| Parameter | Description                                                                                                          |
+|-----------|----------------------------------------------------------------------------------------------------------------------|
+| -i        | Include RIRs (comma-separated list). Possible values are ripe, apnic, lacnic, afrinic, and arin.                     | 
+| -v        | Show version number.                                                                                                 | 
+| -o        | Output file.                                                                                                         | 
+| -t        | Test specific inetnum using RDAP.                                                                                    | 
+| -s        | Silent mode, don't print errors.                                                                                     | 
+| -c        | Whois cache validity (in days). Do not set, use the default instead.                                                 | 
+| -g        | Geofeed file cache validity (in days). Do not set, use the default instead.                                          | 
+| -k        | Keep entries with invalid ISO codes. Not recommended.                                                                | 
+| -u        | Keep invalid subdivisions (accept invalid ISO regions/subdivisions, but keep validating the rest). Not recommended.  | 
+| -r        | Remove invalid subdivisions but keep the rest of the geofeed if valid.                                               | 
 | -z        | Include Zip codes. Not recommended. Zip codes are deprecated in geofeed and by default are excluded from the output. | 
-| -d        | Download timeout. Interrupt downloading a geofeed file after seconds. Default: 10 seconds. |
-| -a        | A comma-separated list of address families. Default: `4,6`. |
-| -l        | Cache directory. Default: `.cache`. |
+| -d        | Download timeout. Interrupt downloading a geofeed file after seconds. Default: 10 seconds.                           |
+| -p        | Do not fetch arin sub allocations. You will save considerable time but have a potentially partial output.            |
+| -a        | A comma-separated list of address families. Default: `4,6`.                                                          |
+| -l        | Cache directory. Default: `.cache`.                                                                                  |
 
 Use `-h` for more options.
 
@@ -117,6 +118,7 @@ const options = {
     keepNonIso: true | false, // Don't validate ISO codes (default: false)
     keepInvalidSubdivisions: true | false, // Don't validate ISO codes of the subdivisions (default: false)
     removeInvalidSubdivisions: true | false, // Remove invalid subdivisions but keep the rest of the geofeed if valid (default: false)
+    skipSuballocations: true | false, // Skip fetching ARIN sub allocations
     test: "ip/prefix", // Test specific ip/prefix using RDAP
     output: "result.csv", // Output file (default: "result.csv")
     downloadTimeout: 5 // Interrupt downloading a geofeed file after seconds (default: 10)
