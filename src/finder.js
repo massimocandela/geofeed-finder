@@ -50,7 +50,8 @@ export default class Finder {
             skipSuballocations: this.params.skipSuballocations,
             defaultCacheDays: this.params.whoisCacheDays,
             compileSuballocationLocally: this.params.compileSuballocationLocally,
-            userAgent: "geofeed-finder"
+            userAgent: "geofeed-finder",
+            deleteCorruptedCacheFile: true
         });
     };
 
@@ -301,7 +302,7 @@ export default class Finder {
 
     translateObject = (object) => {
         let inetnum = object.inetnum || object.inet6num;
-        let remarks = object.remarks;
+        let remarks = object.remarks ?? [];
         let geofeedField = object?.geofeed?.length ? this.matchGeofeedFile(object.geofeed).pop() : null;
 
         let inetnums = [inetnum];
@@ -311,7 +312,7 @@ export default class Finder {
         }
 
         const lastUpdate = moment(object["last-updated"]);
-        const remark = remarks.filter(i => i.toLowerCase().startsWith("geofeed"))[0];
+        const remark = remarks.find(i => i.toLowerCase().startsWith("geofeed"));
 
         let geofeed = null;
         if (geofeedField) {
@@ -384,7 +385,7 @@ export default class Finder {
                     })
             } else {
                 return this.getBlocks()
-                    .then(objects => [].concat.apply([], (objects || []).map(this.translateObject)))
+                    .then((objects=[]) => objects.map(this.translateObject).flat())
                     .then(this.getMostUpdatedInetnums);
             }
         } catch (error) {
