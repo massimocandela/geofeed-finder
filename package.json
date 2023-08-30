@@ -35,20 +35,20 @@
   },
   "homepage": "https://github.com/massimocandela/geofeed-finder#readme",
   "devDependencies": {
-    "@babel/cli": "^7.22.9",
-    "@babel/core": "^7.22.9",
-    "@babel/node": "^7.22.6",
+    "@babel/cli": "^7.22.10",
+    "@babel/core": "^7.22.11",
+    "@babel/node": "^7.22.10",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
-    "@babel/preset-env": "^7.22.9",
-    "dotenv-cli": "^7.2.1",
+    "@babel/preset-env": "^7.22.10",
+    "dotenv-cli": "^7.3.0",
     "pkg": "^5.8.1",
-    "release-it": "^16.1.3"
+    "release-it": "^16.1.5"
   },
   "dependencies": {
     "axios": "=0.27.2",
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.2.3",
+    "bulk-whois-parser": "^1.3.0",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
     "geofeed-validator": "^1.2.3",
