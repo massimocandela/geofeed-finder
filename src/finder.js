@@ -1,5 +1,5 @@
 import batchPromises from "batch-promises";
-import axios from "axios";
+import axios from "redaxios";
 import WhoisParser from "bulk-whois-parser";
 import LongestPrefixMatch from "longest-prefix-match";
 import CsvParser from "./csvParser";
