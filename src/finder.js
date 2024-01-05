@@ -72,18 +72,12 @@ export default class Finder {
 
     getBlocks = () => {
         const selector = this.params.af
-            .map(i => {
-                return i === 4 ? "inetnum" : "inet6num";
-            });
+            .map(i => i === 4 ? "inetnum" : "inet6num");
 
         return this.whois
             .getObjects(selector, this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
-            .then(blocks => {
-                return [].concat.apply([], blocks).filter(i => !!i.inetnum || !!i.inet6num);
-            })
-            .catch(error => {
-                this.logger.log(error);
-            });
+            .then(blocks => blocks.flat().filter(i => !!i.inetnum || !!i.inet6num))
+            .catch(this.logger.log);
     };
 
     _getFileName = (file) => {
@@ -145,9 +139,15 @@ export default class Finder {
         const cachedFile = this._getFileName(file);
 
         if (this._isCachedGeofeedValid(cachedFile)) {
-            this.logEntry(file, true);
+            try {
+                this.logEntry(file, true);
 
-            return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
+                return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
+            } catch (error) {
+                this.logger.log(`Error: ${file} ${error}`);
+                return Promise.resolve(null);
+            }
+
         } else {
             this.logEntry(file, false);
             return axios({
@@ -182,7 +182,7 @@ export default class Finder {
         const out = [];
 
         // pre load all files
-        return batchPromises(10, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
+        return batchPromises(20, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
             .then(() => {
 
                 for (let block of blocks) {
@@ -357,7 +357,6 @@ export default class Finder {
                             const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
                             inetnum = inetnums[0] || null;
                         }
-
 
 
                         const urls = items
