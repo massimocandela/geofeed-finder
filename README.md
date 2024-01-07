@@ -77,7 +77,7 @@ The application accepts the following parameters:
 | -a        | A comma-separated list of address families. Default: `4,6`.                                                          |
 | -l        | Cache directory. Default: `.cache`.                                                                                  |
 
-Use `-h` for more options.
+Use `-h` for more options. See [here](https://github.com/massimocandela/geofeed-finder/issues/31) more information about `-k`, `-u`, and `-r`.
 
 
 Downloading data from ARIN whois takes longer. 
