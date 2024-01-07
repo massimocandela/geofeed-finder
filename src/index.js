@@ -108,7 +108,7 @@ const options = {
     logger,
     cacheDir: params.l || ".cache/",
     whoisCacheDays: parseInt(params.c),
-    daysWhoisSuballocationsCache: 15, // Cannot be less than 7
+    daysWhoisSuballocationsCache: 30, // Cannot be less than 7
     compileSuballocationLocally: !!params.q,
     skipSuballocations: !!params.p,
     geofeedCacheDays: parseInt(params.g),
