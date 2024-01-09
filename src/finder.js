@@ -180,9 +180,14 @@ export default class Finder {
 
     getGeofeedsFiles = (blocks) => {
         const out = [];
+        const uniqueBlocks = [...new Set(blocks.map(i => i.geofeed))];
+        const half =  Math.floor(uniqueBlocks.length / 2);
 
         // pre load all files
-        return batchPromises(20, [...new Set(blocks.map(i => i.geofeed))], this._getGeofeedFile)
+        return Promise.all([
+            batchPromises(20, uniqueBlocks.slice(0, half), this._getGeofeedFile),
+            batchPromises(20, uniqueBlocks.slice(half), this._getGeofeedFile)
+        ])
             .then(() => {
 
                 for (let block of blocks) {
