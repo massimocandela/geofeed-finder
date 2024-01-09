@@ -40,14 +40,14 @@
     "@babel/node": "^7.22.19",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
-    "@babel/preset-env": "^7.23.7",
+    "@babel/preset-env": "^7.23.8",
     "dotenv-cli": "^7.3.0",
     "pkg": "^5.8.1",
     "release-it": "^16.2.1"
   },
   "dependencies": {
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.4.0",
+    "bulk-whois-parser": "^1.4.3",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
     "geofeed-validator": "^1.2.3",
