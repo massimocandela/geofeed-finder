@@ -43,16 +43,16 @@
     "@babel/preset-env": "^7.23.8",
     "dotenv-cli": "^7.3.0",
     "pkg": "^5.8.1",
-    "release-it": "^16.2.1"
+    "release-it": "^17.0.1"
   },
   "dependencies": {
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.4.3",
+    "bulk-whois-parser": "^1.4.5",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
     "geofeed-validator": "^1.2.3",
     "ip-address": "^8.1.0",
-    "ip-sub": "^1.5.1",
+    "ip-sub": "^1.5.2",
     "longest-prefix-match": "^1.2.6",
     "md5": "^2.3.0",
     "moment": "^2.30.1",
