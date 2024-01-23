@@ -265,12 +265,9 @@ export default class Finder {
     setGeofeedPriority = (geofeeds=[]) => {
         console.log("Validating prefix ownership");
 
-        const v4 = this.params.af.includes(4) ? geofeeds.filter(i => i.af === 4) : [];
-        const v6 = this.params.af.includes(6) ? geofeeds.filter(i => i.af === 6) : [];
-
         return [
-            ...this._setGeofeedPriority(v4),
-            ...this._setGeofeedPriority(v6),
+            ...this.params.af.includes(4) ? this._setGeofeedPriority(geofeeds.filter(i => i.af === 4)) : [],
+            ...this.params.af.includes(6) ? this._setGeofeedPriority(geofeeds.filter(i => i.af === 6)) : [],
         ].flat();
     }
 
