@@ -169,7 +169,7 @@ export default class Finder {
                     }
                 })
                 .catch(error => {
-                    this.logger.log(`Error: ${file} ${error}`);
+                    this.logger.log(`Error: ${file} ${error.message}`);
                     return null;
                 });
 
