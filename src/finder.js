@@ -213,6 +213,7 @@ export default class Finder {
                     g.af = ipUtils.getAddressFamily(g.prefix);
                 }
 
+
                 return data;
             });
     };
@@ -345,21 +346,32 @@ export default class Finder {
                     throw new Error("The input must be an IP or a prefix");
                 }
 
-                return this.getInetnum(prefix.split("/")[0])
-                    .then(answer => {
+                return Promise.all([
+                    this.getInetnum(prefix.split("/")[0]),
+                    this.getInetnum(prefix)
+                ])
+                    .then(answers => {
+                        let inetnum, items;
+                        for (let answer of answers) {
+                            items = answer.split("\n");
+                            const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
+                            const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
-                        const items = answer.split("\n");
-                        const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
-                        const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
 
-                        let inetnum = range.trim();
+                            inetnum = range.trim();
 
-                        if (!range.includes("/")) {
-                            const [start, stop] = range.split("-").map(i => i.trim());
-                            const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
-                            inetnum = inetnums[0] || null;
+                            if (!range.includes("/")) {
+                                const [start, stop] = range.split("-").map(i => i.trim());
+                                const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
+                                inetnum = inetnums[0] || null;
+                            }
+
+                            if (inetnum) {
+                                return {inetnum, items};
+                            }
                         }
-
+                    })
+                    .then(({inetnum, items}) => {
 
                         const urls = items
                             .filter(i => i.toLowerCase().includes("geofeed"))
