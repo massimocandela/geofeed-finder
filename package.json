@@ -57,7 +57,7 @@
     "md5": "^2.3.0",
     "moment": "^2.30.1",
     "redaxios": "^0.5.1",
-    "whois": "https://gitpkg.now.sh/massimocandela/node-whois?5561514",
+    "whois": "github:massimocandela/node-whois#dist",
     "yargs": "^17.7.2"
   },
   "pkg": {
