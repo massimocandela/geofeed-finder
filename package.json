@@ -41,7 +41,7 @@
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
     "@babel/preset-env": "^7.24.0",
-    "dotenv-cli": "^7.4.0",
+    "dotenv-cli": "^7.4.1",
     "pkg": "^5.8.1",
     "release-it": "^17.1.1"
   },
@@ -57,7 +57,7 @@
     "md5": "^2.3.0",
     "moment": "^2.30.1",
     "redaxios": "^0.5.1",
-    "whois": "https://gitpkg.now.sh/massimocandela/node-whois?dist",
+    "whois": "https://gitpkg.now.sh/massimocandela/node-whois?5561514",
     "yargs": "^17.7.2"
   },
   "pkg": {
