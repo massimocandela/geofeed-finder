@@ -149,6 +149,7 @@ export default class Finder {
             }
 
         } else {
+            file = this.maybeFixupGithubGeofeedUrl(file);
             this.logEntry(file, false);
             return axios({
                 url: file,
@@ -301,6 +302,27 @@ export default class Finder {
 
     matchGeofeedFile = (remark) => {
         return remark.match(/\bhttps?:\/\/\S+/gi) || [];
+    };
+
+    maybeFixupGithubGeofeedUrl = (urlString) => {
+        const { URL } = require('url');
+
+        try {
+            let parsedUrl = new URL(urlString);
+
+            let pathParts = parsedUrl.pathname.split('/');
+
+            if (parsedUrl.hostname === 'github.com' && pathParts.length > 3 && pathParts[3] === 'blob') {
+                parsedUrl.hostname = 'raw.githubusercontent.com';
+                pathParts.splice(3, 1); // Remove the 3rd part of the path
+                parsedUrl.pathname = pathParts.join('/');
+                console.log(`Fixed up bad Github url`);
+            }
+
+            return parsedUrl.toString();
+        } catch(error) {
+            return urlString;
+        }
     };
 
     translateObject = (object) => {
