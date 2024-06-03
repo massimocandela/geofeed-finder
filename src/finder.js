@@ -162,7 +162,7 @@ export default class Finder {
                 .then(response => {
                     const data = response.data;
                     if (Util.checkHtmlContent(data)) {
-                        const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
+                        const message = `Error: ${url} is not CSV but HTML, stop with this nonsense!`;
                         this.logger.log(message);
                         console.log(message);
                     } else {
