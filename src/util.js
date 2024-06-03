@@ -17,12 +17,11 @@ class Util {
     }
 
     static getParsedGithubUrl(file) {
-        let parsedUrl;
-        (file.startsWith('https://github.com/') ||
-            file.startsWith('http://github.com/') ||
-            file.startsWith('github.com/')) ?
-            parsedUrl = file.replace('/blob/', '/raw/') : parsedUrl = file;
-        return parsedUrl;
+        if (file.startsWith('https://github.com/') || file.startsWith('github.com/')) {
+            return file.replace('github.com', 'raw.githubusercontent.com').replace('/blob', '');
+        }
+
+        return file;
     }
 }
 
