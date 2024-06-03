@@ -1,13 +1,14 @@
 import batchPromises from "batch-promises";
-import axios from "redaxios";
 import WhoisParser from "bulk-whois-parser";
-import LongestPrefixMatch from "longest-prefix-match";
-import CsvParser from "./csvParser";
-import md5 from "md5";
 import fs from "fs";
-import moment from "moment";
 import ipUtils from "ip-sub";
+import LongestPrefixMatch from "longest-prefix-match";
+import md5 from "md5";
+import moment from "moment";
+import axios from "redaxios";
 import webWhois from "whois";
+import CsvParser from "./csvParser";
+import Util from "./util";
 
 export default class Finder {
     constructor(params) {
@@ -15,7 +16,7 @@ export default class Finder {
             cacheDir: ".cache/",
             whoisCacheDays: 3,
             geofeedCacheDays: 7,
-            af: [4,6],
+            af: [4, 6],
             includeZip: false,
             silent: false,
             keepNonIso: false,
@@ -75,7 +76,7 @@ export default class Finder {
             .map(i => i === 4 ? "inetnum" : "inet6num");
 
         return this.whois
-            .getObjects(selector, this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
+            .getObjects(selector, this.filterFunction, ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
             .then(blocks => blocks.flat().filter(i => !!i.inetnum || !!i.inet6num))
             .catch(this.logger.log);
     };
@@ -150,14 +151,17 @@ export default class Finder {
 
         } else {
             this.logEntry(file, false);
+
+            const url = Util.getParsedGithubUrl(file);
+
             return axios({
-                url: file,
+                url,
                 timeout: parseInt(this.params.downloadTimeout) * 1000,
                 method: 'GET'
             })
                 .then(response => {
                     const data = response.data;
-                    if (/<a|<div|<span|<style|<link/gi.test(data)) {
+                    if (Util.checkHtmlContent(data)) {
                         const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
                         this.logger.log(message);
                         console.log(message);
@@ -181,7 +185,7 @@ export default class Finder {
     getGeofeedsFiles = (blocks) => {
         const out = [];
         const uniqueBlocks = [...new Set(blocks.map(i => i.geofeed))];
-        const half =  Math.floor(uniqueBlocks.length / 2);
+        const half = Math.floor(uniqueBlocks.length / 2);
 
         // pre load all files
         return Promise.all([
@@ -263,7 +267,7 @@ export default class Finder {
         return Object.values(index);
     };
 
-    setGeofeedPriority = (geofeeds=[]) => {
+    setGeofeedPriority = (geofeeds = []) => {
         console.log("Validating prefix ownership");
 
         return [
@@ -272,7 +276,7 @@ export default class Finder {
         ].flat();
     }
 
-    _setGeofeedPriority = (geofeeds=[]) => {
+    _setGeofeedPriority = (geofeeds = []) => {
         const longestPrefixMatch = new LongestPrefixMatch();
 
         let tmp = {};
@@ -291,16 +295,15 @@ export default class Finder {
     };
 
     testGeofeedRemark = (remark) => {
-        return /^Geofeed:?\s+https?:\/\/\S+/gi.test(remark);
+        return Util.testGeofeedRemark(remark);
     };
 
     testGeofeedRemarkStrict = (remark) => {
-        return /\sGeofeed https?:\/\/\S+/g.test(remark);
+        return Util.testGeofeedRemarkStrict(remark);
     };
 
-
     matchGeofeedFile = (remark) => {
-        return remark.match(/\bhttps?:\/\/\S+/gi) || [];
+        return Util.matchGeofeedFile(remark);
     };
 
     translateObject = (object) => {
@@ -320,7 +323,7 @@ export default class Finder {
         let geofeed = null;
         if (geofeedField) {
             geofeed = geofeedField;
-        } else if (remark){
+        } else if (remark) {
             geofeed = this.matchGeofeedFile(remark).pop();
         }
 
@@ -367,11 +370,11 @@ export default class Finder {
                             }
 
                             if (inetnum) {
-                                return {inetnum, items};
+                                return { inetnum, items };
                             }
                         }
                     })
-                    .then(({inetnum, items}) => {
+                    .then(({ inetnum, items }) => {
 
                         const urls = items
                             .filter(i => i.toLowerCase().includes("geofeed"))
@@ -398,7 +401,7 @@ export default class Finder {
                     })
             } else {
                 return this.getBlocks()
-                    .then((objects=[]) => objects.map(this.translateObject).flat())
+                    .then((objects = []) => objects.map(this.translateObject).flat())
                     .then(this.getMostUpdatedInetnums);
             }
         } catch (error) {
