@@ -1,6 +1,7 @@
-import Finder from "./finder"
 import fs from "fs";
 import yargs from 'yargs';
+import Finder from "./finder";
+import Util from "./util";
 
 const toGeofeed = (geofeedsObjects) => geofeedsObjects.join("\n");
 
@@ -16,7 +17,7 @@ const logger = new FileLogger({
     compressOnRotation: false,
     label: "geofeed-finder",
     useUTC: true,
-    format: ({data, timestamp}) => `${timestamp} ${data}`
+    format: ({ data, timestamp }) => `${timestamp} ${data}`
 });
 
 
@@ -129,7 +130,7 @@ new Finder(options)
     .getGeofeeds()
     .then(data => {
         if (!!options.test) {
-            if (/<a|<div|<span|<style|<link/gi.test(data)) {
+            if (Util.checkHtmlContent(data)) {
                 console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
             } else {
                 console.log(toGeofeed(data));
