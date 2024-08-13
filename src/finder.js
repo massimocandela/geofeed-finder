@@ -9,6 +9,8 @@ import moment from "moment";
 import ipUtils from "ip-sub";
 import webWhois from "whois";
 
+require('events').EventEmitter.defaultMaxListeners = 200;
+
 export default class Finder {
     constructor(params) {
         const defaults = {
@@ -136,44 +138,61 @@ export default class Finder {
     };
 
     _getGeofeedFile = (file) => {
-        const cachedFile = this._getFileName(file);
 
-        if (this._isCachedGeofeedValid(cachedFile)) {
-            try {
-                this.logEntry(file, true);
+        const abortTimeout = parseInt(this.params.downloadTimeout) * 1000;
 
-                return Promise.resolve(fs.readFileSync(cachedFile, 'utf8'));
-            } catch (error) {
-                this.logger.log(`Error: ${file} ${error}`);
-                return Promise.resolve(null);
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                this.logger.log(`Error: ${file} timeout`);
+                resolve(null);
+            }, abortTimeout);
+
+            const resolveAndClear = (data) => {
+                resolve(data);
+                clearTimeout(timeout);
             }
 
-        } else {
-            this.logEntry(file, false);
-            return axios({
-                url: file,
-                timeout: parseInt(this.params.downloadTimeout) * 1000,
-                method: 'GET'
-            })
-                .then(response => {
-                    const data = response.data;
-                    if (/<a|<div|<span|<style|<link/gi.test(data)) {
-                        const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
-                        this.logger.log(message);
-                        console.log(message);
-                    } else {
-                        fs.writeFileSync(cachedFile, data);
-                        this._setGeofeedCacheHeaders(response, cachedFile);
+            const cachedFile = this._getFileName(file);
 
-                        return data;
-                    }
+            if (this._isCachedGeofeedValid(cachedFile)) {
+                try {
+                    this.logEntry(file, true);
+
+                    resolveAndClear(fs.readFileSync(cachedFile, 'utf8'));
+                } catch (error) {
+                    this.logger.log(`Error: ${file} ${error}`);
+                    resolveAndClear(null);
+                }
+
+            } else {
+
+                this.logEntry(file, false);
+
+                axios({
+                    url: file,
+                    method: 'GET',
+                    timeout: abortTimeout
                 })
-                .catch(error => {
-                    this.logger.log(`Error: ${file} ${error.message}`);
-                    return null;
-                });
+                    .then(response => {
+                        const data = response.data;
+                        if (/<a|<div|<span|<style|<link/gi.test(data)) {
+                            const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
+                            this.logger.log(message);
+                            console.log(message);
+                            resolveAndClear(null);
+                        } else {
+                            fs.writeFileSync(cachedFile, data);
+                            this._setGeofeedCacheHeaders(response, cachedFile);
 
-        }
+                            resolveAndClear(data);
+                        }
+                    })
+                    .catch(error => {
+                        this.logger.log(`Error: ${file} ${error.message}`);
+                        resolveAndClear(null);
+                    });
+            }
+        });
     };
 
 
@@ -185,8 +204,8 @@ export default class Finder {
 
         // pre load all files
         return Promise.all([
-            batchPromises(20, uniqueBlocks.slice(0, half), this._getGeofeedFile),
-            batchPromises(20, uniqueBlocks.slice(half), this._getGeofeedFile)
+            batchPromises(40, uniqueBlocks.slice(0, half), this._getGeofeedFile),
+            batchPromises(40, uniqueBlocks.slice(half), this._getGeofeedFile)
         ])
             .then(() => {
 
