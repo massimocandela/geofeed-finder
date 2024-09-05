@@ -376,6 +376,7 @@ export default class Finder {
 
                 let answers = [];
                 return batchPromises(1, prefixes, prefix => this.getInetnum(prefix).then(i => answers.push(i)))
+                    .then(() => this.getLacnicInetnum(prefixes[0]).then(i => answers.push(i)))
                     .then(() => answers.flat())
                     .then(answers => {
                         let inetnum, items;
@@ -473,17 +474,24 @@ export default class Finder {
         });
     }
 
+    getLacnicInetnum = (prefix) => {
+        // LACNIC is special as always, they throttle whois 1 query per minute or something, so we check only the most specific
+        return this._whois(prefix, "whois.lacnic.net")
+            .catch(() => {
+                // LACNIC is throttling... tough luck
+                return [];
+            })
+            .then(list => list.map(i => i.data));
+    }
+
     getInetnum = (prefix) => {
         return Promise.all([
-            this._whois(prefix, "whois.lacnic.net"),
-            this._whois(prefix, "whois.ripe.net"),
-            this._whois(prefix, "whois.arin.net"),
-            this._whois(prefix, "whois.apnic.net"),
-            this._whois(prefix, "whois.afrinic.net")
+            this._whois(prefix, "whois.ripe.net").catch(() => []),
+            this._whois(prefix, "whois.arin.net").catch(() => []),
+            this._whois(prefix, "whois.apnic.net").catch(() => []),
+            this._whois(prefix, "whois.afrinic.net").catch(() => [])
         ])
             .then(list => list.flat())
-            .then(list => {
-                return list.map(i => i.data);
-            });
+            .then(list => list.map(i => i.data));
     }
 }
