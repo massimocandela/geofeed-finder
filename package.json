@@ -43,11 +43,12 @@
     "@babel/preset-env": "^7.25.3",
     "dotenv-cli": "^7.4.2",
     "pkg": "^5.8.1",
-    "release-it": "^17.6.0"
+    "release-it": "^17.10.0"
   },
   "dependencies": {
     "batch-promises": "0.0.3",
-    "bulk-whois-parser": "^1.4.10",
+    "brembo": "^2.1.4",
+    "bulk-whois-parser": "^1.4.11",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
     "geofeed-validator": "^1.2.6",

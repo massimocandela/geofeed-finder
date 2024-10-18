@@ -8,8 +8,11 @@ import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
 import webWhois from "whois";
+import LiveTestGeofeedRdap from './liveTestGeofeedRdap';
 
 require('events').EventEmitter.defaultMaxListeners = 200;
+
+const rdap = new LiveTestGeofeedRdap();
 
 export default class Finder {
     constructor(params) {
@@ -354,94 +357,107 @@ export default class Finder {
             });
     };
 
+    getGeofeedInetnumTestPairs = (prefix) => {
+        try {
 
+            const [ip, bits] = ipUtils.getIpAndCidr(prefix);
+            const af = ipUtils.getAddressFamily(ip);
+
+            const prefixes = [ip];
+
+            for (let i=bits; i >=16; i--) {
+                prefixes.push(ipUtils._expandIP(ipUtils.fromBinary(ipUtils.applyNetmask([ip, i].join("/"), af), af), af) + `/${i}`);
+            }
+
+            let answers = [];
+            return batchPromises(1, prefixes, prefix => this.getInetnum(prefix).then(i => answers.push(i)))
+                .then(() => this.getLacnicInetnum(prefixes[0]).then(i => answers.push(i)))
+                .then(() => answers.flat())
+                .then(answers => {
+                    let inetnum, items;
+                    const out = [];
+
+                    for (let answer of answers) {
+                        try {
+                            items = answer.split("\n");
+
+                            const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
+                            const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
+
+                            inetnum = range.trim();
+
+                            if (!range.includes("/")) {
+                                const [start, stop] = range.split("-").map(i => i.trim());
+                                const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
+                                inetnum = inetnums[0] || null;
+                            }
+
+                            if (inetnum) {
+                                out.push({inetnum, items});
+                            }
+                        } catch (e) {
+                            // No inetnum
+                        }
+                    }
+
+                    return out;
+                })
+                .then(answers => {
+                    let index = {};
+
+                    answers
+                        .forEach(({inetnum, items}) => {
+
+                            const urls = items
+                                .filter(i => i.toLowerCase().includes("geofeed"))
+                                .map(remark => {
+                                    const geofeedFile = this.matchGeofeedFile(remark);
+
+                                    if (geofeedFile &&
+                                        (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
+                                        !this.testGeofeedRemarkStrict(remark)) {
+                                        console.log(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
+                                    }
+
+                                    return geofeedFile;
+                                });
+
+                            urls.flat()
+                                .forEach(geofeed => {
+
+                                    if (geofeed) {
+                                        index[`${inetnum}-${geofeed}`] = {
+                                            inetnum,
+                                            geofeed,
+                                            lastUpdate: moment() // It doesn't matter in this case
+                                        };
+                                    }
+                                });
+                        })
+
+                    return Object.values(index);
+                });
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
 
     getGeofeedInetnumPairs = () => {
         try {
             if (this.params.test) {
-                const prefix = ipUtils.toPrefix(this.params?.test?.toString().trim());
+                const prefix = ipUtils.toPrefix(this.params.test.toString().trim());
 
                 if (!ipUtils.isValidPrefix(prefix) && !ipUtils.isValidIP(prefix)) {
                     throw new Error("The input must be an IP or a prefix");
                 }
 
-                const [ip, bits] = ipUtils.getIpAndCidr(prefix);
-                const af = ipUtils.getAddressFamily(ip);
-
-                const prefixes = [ip];
-
-                for (let i=bits; i >=16; i--) {
-                    prefixes.push(ipUtils._expandIP(ipUtils.fromBinary(ipUtils.applyNetmask([ip, i].join("/"), af), af), af) + `/${i}`);
-                }
-
-                let answers = [];
-                return batchPromises(1, prefixes, prefix => this.getInetnum(prefix).then(i => answers.push(i)))
-                    .then(() => this.getLacnicInetnum(prefixes[0]).then(i => answers.push(i)))
-                    .then(() => answers.flat())
-                    .then(answers => {
-                        let inetnum, items;
-                        const out = [];
-
-                        for (let answer of answers) {
-                            try {
-
-                                items = answer.split("\n");
-
-                                const inetnumsLines = items.map(i => i.toLowerCase()).filter(i => i.startsWith("inetnum") || i.startsWith("netrange") || i.startsWith("inet6num"));
-                                const range = inetnumsLines[inetnumsLines.length - 1].split(":").slice(1).join(":");
-
-                                inetnum = range.trim();
-
-                                if (!range.includes("/")) {
-                                    const [start, stop] = range.split("-").map(i => i.trim());
-                                    const inetnums = ipUtils.ipRangeToCidr(start, stop).filter(inetnum => ipUtils.isEqualPrefix(inetnum, prefix) || ipUtils.isSubnet(inetnum, prefix));
-                                    inetnum = inetnums[0] || null;
-                                }
-
-                                if (inetnum) {
-                                    out.push({inetnum, items});
-                                }
-                            } catch (e) {
-                                // No inetnum
-                            }
+                return rdap.getGeofeed(prefix)
+                    .then(data => {
+                        if (!data.length) {
+                            return this.getGeofeedInetnumTestPairs(prefix)
                         }
 
-                        return out;
-                    })
-                    .then(answers => {
-                        let index = {};
-
-                         answers
-                            .forEach(({inetnum, items}) => {
-
-                                const urls = items
-                                    .filter(i => i.toLowerCase().includes("geofeed"))
-                                    .map(remark => {
-                                        const geofeedFile = this.matchGeofeedFile(remark);
-
-                                        if (geofeedFile &&
-                                            (remark.toLocaleString().startsWith("remarks:") || remark.toLocaleString().startsWith("comment:")) &&
-                                            !this.testGeofeedRemarkStrict(remark)) {
-                                            console.log(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
-                                        }
-
-                                        return geofeedFile;
-                                    });
-
-                                urls.flat()
-                                    .forEach(geofeed => {
-
-                                        if (geofeed) {
-                                            index[`${inetnum}-${geofeed}`] = {
-                                                inetnum,
-                                                geofeed,
-                                                lastUpdate: moment() // It doesn't matter in this case
-                                            };
-                                        }
-                                    });
-                            })
-
-                        return Object.values(index);
+                        return data;
                     });
             } else {
                 return this.getBlocks()
