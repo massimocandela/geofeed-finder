@@ -7,13 +7,9 @@ import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
-import webWhois from "whois";
-import LiveTestGeofeedRdap from './liveTestGeofeedRdap';
 import {lessSpecific} from 'whois-wrapper';
 
 require('events').EventEmitter.defaultMaxListeners = 200;
-
-const rdap = new LiveTestGeofeedRdap();
 
 export default class Finder {
     constructor(params) {
@@ -374,7 +370,7 @@ export default class Finder {
                         const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
                         const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()));
                         return [...geofeedAttributes, ...remarks].length > 0;
-                    }, 16)
+                    }, 12)
                     .then(data => data.map(i => i.data).flat())
                     .then(answers => {
                         const items = answers.filter(i => i.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase())) && (i.find(i => i.key === "geofeed") || i.find(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark))));
@@ -423,36 +419,4 @@ export default class Finder {
             });
     };
 
-    _whois = (prefix, server) => {
-        return new Promise((resolve, reject) => {
-            webWhois.lookup(prefix, { server, follow: 40, verbose: true, timeout: 20000, returnPartialOnTimeout: true }, (error, data) => {
-                if (error) {
-                    reject(error)
-                } else {
-                    resolve(data);
-                }
-            })
-        });
-    }
-
-    getLacnicInetnum = (prefix) => {
-        // LACNIC is special as always, they throttle whois 1 query per minute or something, so we check only the most specific
-        return this._whois(prefix, "whois.lacnic.net")
-            .catch(() => {
-                // LACNIC is throttling... tough luck
-                return [];
-            })
-            .then(list => list.map(i => i.data));
-    }
-
-    getInetnum = (prefix) => {
-        return Promise.all([
-            this._whois(prefix, "whois.ripe.net").catch(() => []),
-            this._whois(prefix, "whois.arin.net").catch(() => []),
-            this._whois(prefix, "whois.apnic.net").catch(() => []),
-            this._whois(prefix, "whois.afrinic.net").catch(() => [])
-        ])
-            .then(list => list.flat())
-            .then(list => list.map(i => i.data));
-    }
 }
