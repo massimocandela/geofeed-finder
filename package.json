@@ -59,6 +59,7 @@
     "moment": "^2.30.1",
     "redaxios": "^0.5.1",
     "whois": "github:massimocandela/node-whois#dist",
+    "whois-wrapper": "^1.0.11",
     "yargs": "^17.7.2"
   },
   "pkg": {
