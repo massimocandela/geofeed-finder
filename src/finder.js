@@ -398,6 +398,8 @@ export default class Finder {
                                 inetnums.forEach(inetnum => {
                                     index[`${inetnum}-${geofeed}`] = {
                                         inetnum,
+                                        geofeedAttribute: !!geofeedAttributes,
+                                        isRemark: !!remarks,
                                         geofeed,
                                         strict,
                                         whois: item,
