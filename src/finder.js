@@ -314,7 +314,7 @@ export default class Finder {
     };
 
     testGeofeedRemarkStrict = (remark) => {
-        return /\sGeofeed https?:\/\/\S+/g.test(remark);
+        return /^Geofeed https?:\/\/\S+/gi.test(remark);
     };
 
 
@@ -366,11 +366,11 @@ export default class Finder {
                 const index = {};
 
                 return lessSpecific({flag: "h", query: prefix}, (data) => {
-                        const flat = data.map(i => i.data).flat().flat().flat();
-                        const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
-                        const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()));
-                        return [...geofeedAttributes, ...remarks].length > 0;
-                    }, 12)
+                    const flat = data.map(i => i.data).flat().flat().flat();
+                    const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
+                    const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()));
+                    return [...geofeedAttributes, ...remarks].length > 0;
+                }, 12)
                     .then(data => data.map(i => i.data).flat())
                     .then(answers => {
                         const items = answers.filter(i => i.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase())) && (i.find(i => i.key === "geofeed") || i.find(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark))));
@@ -388,13 +388,23 @@ export default class Finder {
 
                             const geofeed = this.matchGeofeedFile(geofeedAttributes ?? remarks)?.[0];
 
-                            inetnums.forEach(inetnum => {
-                                index[`${inetnum}-${geofeed}`] = {
-                                    inetnum,
-                                    geofeed,
-                                    lastUpdate: moment() // It doesn't matter in this case
-                                };
-                            });
+                            if (geofeed) {
+                                const strict = !remarks || this.testGeofeedRemarkStrict(remarks);
+
+                                if (!strict) {
+                                    console.log(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space. Current remarks: ${strict}`);
+                                }
+
+                                inetnums.forEach(inetnum => {
+                                    index[`${inetnum}-${geofeed}`] = {
+                                        inetnum,
+                                        geofeed,
+                                        strict,
+                                        whois: item,
+                                        lastUpdate: moment() // It doesn't matter in this case
+                                    };
+                                });
+                            }
                         }
 
                         return Object.values(index);
