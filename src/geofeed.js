@@ -1,7 +1,7 @@
 import validator from "geofeed-validator";
 import ipUtils from "ip-sub";
 
-function processPrefix (prefix){
+function processPrefix(prefix) {
     if (prefix && (ipUtils.isValidPrefix(prefix) || ipUtils.isValidIP(prefix))) {
         const [ip, cidr] = ipUtils.getIpAndCidr(ipUtils.toPrefix(prefix));
         return `${ipUtils.expandIP(ip)}/${cidr}`;
@@ -34,6 +34,6 @@ export default class Geofeed {
             this.zip || ""
         ]
             .join(",")
-            .replace(/"/g,"");
-    }
+            .replace(/"/g, "");
+    };
 }

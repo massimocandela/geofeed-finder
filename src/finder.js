@@ -7,9 +7,9 @@ import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
-import {lessSpecific} from 'whois-wrapper';
+import {lessSpecific} from "whois-wrapper";
 
-require('events').EventEmitter.defaultMaxListeners = 200;
+require("events").EventEmitter.defaultMaxListeners = 200;
 
 export default class Finder {
     constructor(params) {
@@ -17,7 +17,7 @@ export default class Finder {
             cacheDir: ".cache/",
             whoisCacheDays: 3,
             geofeedCacheDays: 7,
-            af: [4,6],
+            af: [4, 6],
             includeZip: false,
             silent: false,
             keepNonIso: false,
@@ -58,7 +58,6 @@ export default class Finder {
     };
 
 
-
     filterFunction = (inetnum) => {
 
         if (inetnum.geofeed && this.matchGeofeedFile(inetnum.geofeed).length) {
@@ -70,14 +69,14 @@ export default class Finder {
         }
 
         return false;
-    }
+    };
 
     getBlocks = () => {
         const selector = this.params.af
             .map(i => i === 4 ? "inetnum" : "inet6num");
 
         return this.whois
-            .getObjects(selector, this.filterFunction,  ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
+            .getObjects(selector, this.filterFunction, ["inetnum", "inet6num", "remarks", "geofeed", "last-updated"])
             .then(blocks => blocks.flat().filter(i => !!i.inetnum || !!i.inet6num))
             .catch(this.logger.log);
     };
@@ -89,8 +88,8 @@ export default class Finder {
     _setGeofeedCacheHeaders = (response, cachedFile) => {
         let setAge = 3600 * 24 * (this.params.geofeedCacheDays || 7); // default 1 week (see draft)
 
-        if (response.headers['cache-control']) {
-            const maxAge = response.headers['cache-control']
+        if (response.headers["cache-control"]) {
+            const maxAge = response.headers["cache-control"]
                 .split(",")
                 .filter(h => h.includes("max-age"))
                 .map(h => h.trim())
@@ -120,7 +119,7 @@ export default class Finder {
     _importCacheHeaderIndex = () => {
         let tmp;
         if (fs.existsSync(this.cacheHeadersIndexFileName)) {
-            tmp = JSON.parse(fs.readFileSync(this.cacheHeadersIndexFileName, 'utf-8'));
+            tmp = JSON.parse(fs.readFileSync(this.cacheHeadersIndexFileName, "utf-8"));
             for (let key in tmp) {
                 tmp[key] = moment(tmp[key]);
             }
@@ -150,7 +149,7 @@ export default class Finder {
             const resolveAndClear = (data) => {
                 resolve(data);
                 clearTimeout(timeout);
-            }
+            };
 
             const cachedFile = this._getFileName(file);
 
@@ -158,7 +157,7 @@ export default class Finder {
                 try {
                     this.logEntry(file, true);
 
-                    resolveAndClear(fs.readFileSync(cachedFile, 'utf8'));
+                    resolveAndClear(fs.readFileSync(cachedFile, "utf8"));
                 } catch (error) {
                     this.logger.log(`Error: ${file} ${error}`);
                     resolveAndClear(null);
@@ -170,7 +169,7 @@ export default class Finder {
 
                 axios({
                     url: file,
-                    method: 'GET',
+                    method: "GET",
                     timeout: abortTimeout
                 })
                     .then(response => {
@@ -196,11 +195,10 @@ export default class Finder {
     };
 
 
-
     getGeofeedsFiles = (blocks) => {
         const out = [];
         const uniqueBlocks = [...new Set(blocks.map(i => i.geofeed))];
-        const half =  Math.floor(uniqueBlocks.length / 2);
+        const half = Math.floor(uniqueBlocks.length / 2);
 
         // pre load all files
         return Promise.all([
@@ -213,7 +211,7 @@ export default class Finder {
                     const cachedFile = this._getFileName(block.geofeed);
 
                     try {
-                        const data = fs.readFileSync(cachedFile, 'utf8')
+                        const data = fs.readFileSync(cachedFile, "utf8");
 
                         if (data && data.length) {
                             out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
@@ -276,22 +274,22 @@ export default class Finder {
         for (let inetnum of inetnums) {
             index[inetnum.inetnum] = (!index[inetnum.inetnum] || index[inetnum.inetnum].lastUpdate < inetnum.lastUpdate) ?
                 inetnum :
-                index[inetnum.inetnum]
+                index[inetnum.inetnum];
         }
 
         return Object.values(index);
     };
 
-    setGeofeedPriority = (geofeeds=[]) => {
+    setGeofeedPriority = (geofeeds = []) => {
         console.log("Validating prefix ownership");
 
         return [
             ...this.params.af.includes(4) ? this._setGeofeedPriority(geofeeds.filter(i => i.af === 4)) : [],
-            ...this.params.af.includes(6) ? this._setGeofeedPriority(geofeeds.filter(i => i.af === 6)) : [],
+            ...this.params.af.includes(6) ? this._setGeofeedPriority(geofeeds.filter(i => i.af === 6)) : []
         ].flat();
-    }
+    };
 
-    _setGeofeedPriority = (geofeeds=[]) => {
+    _setGeofeedPriority = (geofeeds = []) => {
         const longestPrefixMatch = new LongestPrefixMatch();
 
         let tmp = {};
@@ -339,7 +337,7 @@ export default class Finder {
         let geofeed = null;
         if (geofeedField) {
             geofeed = geofeedField;
-        } else if (remark){
+        } else if (remark) {
             geofeed = this.matchGeofeedFile(remark).pop();
         }
 
@@ -350,7 +348,7 @@ export default class Finder {
                     inetnum,
                     geofeed,
                     lastUpdate
-                }
+                };
             });
     };
 
@@ -379,7 +377,7 @@ export default class Finder {
                             return inetnum?.includes("-")
                                 ? ipUtils.ipRangeToCidr(...inetnum?.split("-").map(n => n.trim()))
                                 : [inetnum];
-                        }
+                        };
 
                         for (let item of items) {
                             const inetnums = rangeToPrefix(item.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase()))?.value);
@@ -414,13 +412,13 @@ export default class Finder {
 
             } else {
                 return this.getBlocks()
-                    .then((objects=[]) => objects.map(this.translateObject).flat())
+                    .then((objects = []) => objects.map(this.translateObject).flat())
                     .then(this.getMostUpdatedInetnums);
             }
         } catch (error) {
             return Promise.reject(error);
         }
-    }
+    };
 
     getGeofeeds = () => {
         return this.getGeofeedInetnumPairs()
