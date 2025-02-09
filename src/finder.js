@@ -26,7 +26,7 @@ export default class Finder {
             include: ["ripe", "afrinic", "apnic", "arin", "lacnic"],
             output: "result.csv",
             test: null,
-            downloadTimeout: 10,
+            downloadTimeout: 14,
             daysWhoisSuballocationsCache: 7, // Cannot be less than this
             skipSuballocations: false,
             compileSuballocationLocally: false
@@ -95,12 +95,9 @@ export default class Finder {
                 .map(h => h.trim())
                 .pop();
 
-            if (maxAge) {
-                const age = maxAge.split("=").pop();
-                if (age && !isNaN(age)) {
-                    setAge = Math.min(Math.max(parseInt(age), 3600), 3600 * 24 * 7); //  Min 1 hour, max 1 week of cache (to avoid random max-age settings)
-                }
-            }
+            let age = maxAge?.split("=")?.pop() ?? 0;
+            age = isNaN(age) ? 0 : age;
+            setAge = Math.min(Math.max(parseInt(age), 3600), 3600 * 24 * 7); //  Min 1 hour, max 1 week of cache (to avoid random max-age settings)
         }
 
         this.cacheHeadersIndex[cachedFile] = this.cacheHeadersIndex[cachedFile] ?? moment(this.startTime).add(setAge, "seconds");
@@ -154,14 +151,9 @@ export default class Finder {
             const cachedFile = this._getFileName(file);
 
             if (this._isCachedGeofeedValid(cachedFile)) {
-                try {
-                    this.logEntry(file, true);
 
-                    resolveAndClear(fs.readFileSync(cachedFile, "utf8"));
-                } catch (error) {
-                    this.logger.log(`Error: ${file} ${error}`);
-                    resolveAndClear(null);
-                }
+                this.logEntry(file, true);
+                resolveAndClear();
 
             } else {
 
@@ -183,15 +175,17 @@ export default class Finder {
                             fs.writeFileSync(cachedFile, data);
                             this._setGeofeedCacheHeaders(response, cachedFile);
 
-                            resolveAndClear(data);
+                            resolveAndClear();
                         }
                     })
                     .catch(error => {
-                        this.logger.log(`Error: ${file} ${error.message}`);
-                        resolveAndClear(null);
+                        this.logger.log(`Error: ${file} ${error?.message ?? "Unknown error"}`);
+                        resolveAndClear();
                     });
             }
-        });
+        })
+            .then(() => {}) // Avoid empty logs
+            .catch(() => {}); // Avoid empty logs
     };
 
 
@@ -202,10 +196,12 @@ export default class Finder {
 
         // pre load all files
         return Promise.all([
-            batchPromises(40, uniqueBlocks.slice(0, half), this._getGeofeedFile),
-            batchPromises(40, uniqueBlocks.slice(half), this._getGeofeedFile)
+            batchPromises(10, uniqueBlocks.slice(0, half), file => this._getGeofeedFile(file)),
+            batchPromises(10, uniqueBlocks.slice(half), file => this._getGeofeedFile(file))
         ])
             .then(() => {
+
+                console.log("All files downloaded. Processing files.");
 
                 for (let block of blocks) {
                     const cachedFile = this._getFileName(block.geofeed);
@@ -237,7 +233,7 @@ export default class Finder {
 
     validateGeofeeds = (geofeeds) => {
         return geofeeds
-            .filter(geofeed => !!geofeed.inetnum && !!geofeed.prefix)
+            .filter(geofeed => !!geofeed?.inetnum && !!geofeed?.prefix)
             .filter(geofeed => {
                 let errors = geofeed.validate();
 
@@ -259,12 +255,7 @@ export default class Finder {
                     this.logger.log(message);
                 }
 
-                if (this.params.keepNonIso || errors.length === 0) {
-                    return geofeed && !!geofeed.inetnum && !!geofeed.prefix &&
-                        (ipUtils.isEqualPrefix(geofeed.inetnum, geofeed.prefix) || ipUtils.isSubnet(geofeed.inetnum, geofeed.prefix));
-                }
-
-                return false;
+                return this.params.keepNonIso || errors.length === 0;
             });
 
     };
@@ -300,7 +291,7 @@ export default class Finder {
         for (let geofeed of geofeeds) {
             const inetnum = longestPrefixMatch.getMatch(geofeed.prefix, false);
             if (inetnum && inetnum.length === 1 && geofeed.inetnum === inetnum[0]) {
-                tmp[geofeed.prefix] = geofeed;
+                tmp[geofeed.prefix] ??= geofeed;
             }
         }
 

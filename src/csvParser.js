@@ -14,7 +14,15 @@ export default class CsvParser {
             for (let l of lines ?? []) {
                 const [prefix, country, region, city, zip] = l.replace("\t", " ").split(",").map(i => i.trim());
 
-                out.push(new Geofeed(inetnum, prefix, country, region, city, zip));
+                if (!!prefix) {
+                    try {
+                        const geofeed = new Geofeed(inetnum, prefix, country, region, city, zip);
+
+                        out.push(geofeed);
+                    } catch (e) {
+                        // Nothing
+                    }
+                }
             }
         }
 

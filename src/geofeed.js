@@ -19,6 +19,10 @@ export default class Geofeed {
         this.zip = zip ? zip.slice(20) : null;
         this.city = city ? city.slice(0, 100) : null;
         this.valid = true;
+
+        if (!(ipUtils.isEqualPrefix(this.inetnum, this.prefix) || ipUtils.isSubnet(this.inetnum, this.prefix))) {
+            throw new Error("Invalid geofeed: inetnum and prefix do not match");
+        }
     };
 
     validate = () => {
