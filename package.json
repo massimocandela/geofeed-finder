@@ -42,7 +42,7 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
     "@babel/preset-env": "^7.27.2",
     "dotenv-cli": "^7.4.2",
-    "pkg": "^5.8.1",
+    "@yao-pkg/pkg": "^6.5.1",
     "release-it": "^19.0.3"
   },
   "dependencies": {
@@ -51,7 +51,7 @@
     "bulk-whois-parser": "^1.4.11",
     "cli-progress": "^3.12.0",
     "fast-file-logger": "^1.1.5",
-    "geofeed-validator": "^1.2.6",
+    "geofeed-validator": "^1.3.0",
     "ip-sub": "^1.7.0",
     "longest-prefix-match": "^1.2.9",
     "md5": "^2.3.0",
@@ -66,7 +66,7 @@
       "./src/dataset/*.json"
     ],
     "targets": [
-      "node18"
+      "node22"
     ]
   },
   "release-it": {
