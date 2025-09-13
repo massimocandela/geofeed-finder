@@ -7,7 +7,7 @@ import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
-import {explicitTransferCheck, lessSpecific, onlyMoreSpecific} from "whois-wrapper";
+import {explicitTransferCheck, lessSpecific} from "whois-wrapper";
 
 require("events").EventEmitter.defaultMaxListeners = 200;
 
