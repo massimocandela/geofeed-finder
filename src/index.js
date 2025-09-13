@@ -18,107 +18,91 @@ const logger = new FileLogger({
     format: ({data, timestamp}) => `${timestamp} ${data}`
 });
 
-const params = yargs(process.argv.slice(2))
-    .version(false)
+
+const params = yargs
     .usage("Usage: $0 <command> [options]")
-    .command("$0", "Run Geofeed finder (default)", (yargs) => {
+
+    .command("$0", "Run Geofeed finder (default)", function () {
         yargs
-            .option("version", {
-                alias: "v",
-                type: "boolean",
-                description: "Show version number"
-            })
-            .option("af", {
-                alias: "a",
-                type: "string",
-                default: "4,6",
-                description: "Address family"
-            })
-            .option("output", {
-                alias: "o",
-                type: "string",
-                default: "result.csv",
-                description: "Output file"
-            })
-            .option("test", {
-                alias: "t",
-                type: "string",
-                description: "Test specific inetnum using RDAP"
-            })
-            .option("cache-whois", {
-                alias: "c",
-                type: "number",
-                default: 3,
-                description: "Number of days whois cache validity"
-            })
-            .option("cache-geofeed", {
-                alias: "g",
-                type: "number",
-                default: 3,
-                description: "Number of days geofeed file cache validity"
-            })
-            .option("cache-location", {
-                alias: "l",
-                type: "string",
-                default: ".cache/",
-                description: "Cache directory location"
-            })
-            .option("silent", {
-                alias: "s",
-                type: "boolean",
-                description: "Silent mode, don't print errors"
-            })
-            .option("keep-invalid-subdivisions", {
-                alias: "u",
-                type: "boolean",
-                description: "Keep invalid subdivisions (accept invalid ISO regions/subdivisions)"
-            })
-            .option("remove-invalid-subdivisions", {
-                alias: "r",
-                type: "boolean",
-                description: "Remove invalid subdivisions but keep the rest of the geofeed if valid"
-            })
-            .option("arin-bulk", {
-                alias: "b",
-                type: "boolean",
-                description: "Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/"
-            })
-            .option("arin-skip-suballocations", {
-                alias: "p",
-                type: "boolean",
-                description: "Do not fetch ARIN's sub allocations. You will save considerable time but have a potentially partial output."
-            })
-            .option("detect-suballocations-locally", {
-                alias: "q",
-                type: "boolean",
-                description: "Detect ARIN's sub allocations locally instead of downloading a dump file."
-            })
-            .option("include-zip", {
-                alias: "z",
-                type: "boolean",
-                description: "Zip codes are deprecated in geofeed and by default are excluded from the output."
-            })
-            .option("keep-non-iso", {
-                alias: "k",
-                type: "boolean",
-                description: "Keep entries with invalid ISO codes"
-            })
-            .option("download-timeout", {
-                alias: "d",
-                type: "number",
-                description: "Interrupt downloading a geofeed file after seconds"
-            })
-            .option("include", {
-                alias: "i",
-                type: "string",
-                default: "ripe,apnic,lacnic,afrinic,arin",
-                description: "Include RIRs (comma-separated list)"
-            });
+            .alias("v", "version")
+            .nargs("v", 0)
+            .describe("v", "Show version number")
+
+            .alias("a", "af")
+            .nargs("a", 1)
+            .default("a", "4,6")
+            .describe("a", "Address family")
+
+            .alias("o", "output")
+            .nargs("o", 1)
+            .default("o", "result.csv")
+            .describe("o", "Output file")
+
+            .alias("t", "test")
+            .nargs("t", 1)
+            .describe("t", "Test specific inetnum using RDAP")
+
+            .alias("c", "cache-whois")
+            .nargs("c", 1)
+            .default("c", 3)
+            .describe("c", "Number of days whois cache validity")
+
+            .alias("g", "cache-geofeed")
+            .nargs("g", 1)
+            .default("g", 3)
+            .describe("g", "Number of days geofeed file cache validity")
+
+            .alias("l", "cache-location")
+            .nargs("l", 1)
+            .default("l", ".cache/")
+            .describe("l", "Cache directory location")
+
+            .alias("s", "silent")
+            .nargs("s", 0)
+            .describe("s", "Silent mode, don't print errors")
+
+            .alias("u", "keep-invalid-subdivisions")
+            .nargs("u", 0)
+            .describe("u", "Keep invalid subdivisions (accept invalid ISO regions/subdivisions)")
+
+            .alias("r", "remove-invalid-subdivisions")
+            .nargs("r", 0)
+            .describe("r", "Remove invalid subdivisions but keep the rest of the geofeed if valid")
+
+            .alias("b", "arin-bulk")
+            .nargs("b", 0)
+            .describe("b", "Use bulk whois data for ARIN: https://www.arin.net/reference/research/bulkwhois/")
+
+            .alias("p", "arin-skip-suballocations")
+            .nargs("p", 0)
+            .describe("p", "Do not fetch ARIN's sub allocations. You will save considerable time but have a potentially partial output.")
+
+            .alias("q", "detect-suballocations-locally")
+            .nargs("q", 0)
+            .describe("q", "Detect ARIN's sub allocations locally instead of downloading a dump file.")
+
+            .alias("z", "include-zip")
+            .nargs("z", 0)
+            .describe("z", "Zip codes are deprecated in geofeed and by default are excluded from the output.")
+
+            .alias("k", "keep-non-iso")
+            .nargs("k", 0)
+            .describe("k", "Keep entries with invalid ISO codes")
+
+            .alias("d", "download-timeout")
+            .nargs("d", 1)
+            .describe("d", "Interrupt downloading a geofeed file after seconds")
+
+            .alias("i", "include")
+            .nargs("i", 1)
+            .default("i", "ripe,apnic,lacnic,afrinic,arin")
+            .describe("i", "Include RIRs (comma-separated list)");
     })
     .help("h")
     .alias("h", "help")
     .epilog("Copyright (c) 2020, Massimo Candela")
-    .parse();
+    .argv;
+
 const options = {
     logger,
     cacheDir: params.l || ".cache/",
