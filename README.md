@@ -1,6 +1,14 @@
 # geofeed-finder
 
-**This utility discovers and retrieves geofeed files from whois data. Additionally, it validates the ownership of the prefixes, manages the cache, and validates the ISO codes. See [RFC9092](https://datatracker.ietf.org/doc/draft-ietf-opsawg-finding-geofeeds/).**
+```
+More info about geofeeds at [https://geolocatemuch.com/](https://geolocatemuch.com/)
+```
+
+**This utility discovers and retrieves geofeed files from whois data. Additionally, it validates the ownership of the prefixes, manages the cache, and validates the ISO codes. See [RFC9092/RFC9632](https://www.rfc-editor.org/rfc/rfc9632.html).**
+
+```
+If you only need a single file with all validated geofeed files discovered on WHOIS, you can download it at [https://geolocatemuch.com/](https://geolocatemuch.com/) (bottom of the page).
+```
 
 To use the compiled version (linux, mac, windows), see [releases](https://github.com/massimocandela/geofeed-finder/releases/). Otherwise, you can just download the code and do `npm ci` and `npm run serve` to run it.
 
