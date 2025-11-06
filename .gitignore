@@ -9,3 +9,4 @@ logs/
 result.csv
 .env
 logs/
+src/index2.js
