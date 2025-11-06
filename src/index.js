@@ -127,26 +127,42 @@ const options = {
 new Finder(options)
     .getGeofeeds()
     .then(data => {
-        if (!!options.test) {
-            if (/<a|<div|<span|<style|<link/gi.test(data)) {
-                console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
-            } else {
-                console.log(toGeofeed(data));
+
+        return new Promise((resolve, reject) => {
+            try {
+                if (!!options.test) {
+                    if (/<a|<div|<span|<style|<link/gi.test(data)) {
+                        console.log(`Error: is not CSV but HTML, stop with this nonsense!`);
+                    } else {
+                        console.log(toGeofeed(data));
+                    }
+                    resolve();
+
+                } else {
+
+                    fs.writeFileSync(options.output, "");
+                    const out = fs.createWriteStream(options.output, {
+                        flags: "a"
+                    });
+
+                    for (let line of data ?? []) {
+                        out.write(line + "\n", "UTF8");
+                    }
+
+                    out.end();
+
+                    out.on("finish", () => {
+                        console.log(`Done! See ${options.output}`);
+                        resolve();
+                    });
+
+                    out.on("error", reject);
+                }
+            } catch (error) {
+                reject(error);
             }
-        } else {
+        });
 
-            fs.writeFileSync(options.output, "");
-            const out = fs.createWriteStream(options.output, {
-                flags: "a"
-            });
-
-            for (let line of data ?? []) {
-                out.write(line + "\n");
-            }
-            out.end();
-
-            console.log(`Done! See ${options.output}`);
-        }
     })
     .catch(error => {
         logger.log(error.message);
