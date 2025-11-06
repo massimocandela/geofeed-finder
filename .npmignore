@@ -11,3 +11,4 @@ logs/
 result.csv
 .env
 .gitignore
+src/index2.js
