@@ -157,6 +157,10 @@ export default class Finder {
 
             } else {
 
+                if (fs.existsSync(cachedFile)) {
+                    fs.unlinkSync(cachedFile);
+                }
+
                 this.logEntry(file, false);
 
                 axios({
