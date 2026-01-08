@@ -134,6 +134,20 @@ const options = {
     downloadTimeout: params.d || 10 // 0 is not a valid value
 };
 
+const exitWhenDone = (exitCode = 0) => {
+    if (!options.disableProcessing) {
+        return;
+    }
+
+    const exit = () => process.exit(exitCode);
+
+    if (logger?.stream?.end) {
+        logger.stream.end(exit);
+    } else {
+        exit();
+    }
+};
+
 new Finder(options)
     .getGeofeeds()
     .then(data => {
@@ -147,6 +161,7 @@ new Finder(options)
                         console.log(toGeofeed(data));
                     }
                     resolve();
+                    exitWhenDone(0);
 
                 } else {
 
@@ -155,20 +170,21 @@ new Finder(options)
                         flags: "a"
                     });
 
-                    for (let line of data ?? []) {
-                        out.write(line + "\n", "UTF8");
-                    }
-
-                    out.end();
-
                     out.on("finish", () => {
                         if (!options.disableProcessing) {
                             console.log(`Done! See ${options.output}`);
                         }
                         resolve();
+                        exitWhenDone(0);
                     });
 
                     out.on("error", reject);
+
+                    for (let line of data ?? []) {
+                        out.write(line + "\n", "UTF8");
+                    }
+
+                    out.end();
                 }
             } catch (error) {
                 reject(error);
@@ -178,4 +194,5 @@ new Finder(options)
     })
     .catch(error => {
         logger.log(error.message);
+        exitWhenDone(1);
     });
