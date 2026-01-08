@@ -78,6 +78,8 @@ The application accepts the following parameters:
 | -r        | Remove invalid subdivisions but keep the rest of the geofeed if valid.                                               | 
 | -z        | Include Zip codes. Not recommended. Zip codes are deprecated in geofeed and by default are excluded from the output. | 
 | -d        | Download timeout. Interrupt downloading a geofeed file after seconds. Default: 10 seconds.                           |
+| -f        | Path to a file with additional geofeed URLs (one per line).                                                          |
+| -x        | Download geofeed files but skip processing and validation.                                                           |
 | -p        | Do not fetch arin sub allocations. You will save considerable time but have a potentially partial output.            |
 | -q        | Detect ARIN's sub allocations locally instead of downloading a dump file.                                            |
 | -a        | A comma-separated list of address families. Default: `4,6`.                                                          |
@@ -128,7 +130,9 @@ const options = {
     skipSuballocations: true | false, // Skip fetching ARIN sub allocations
     test: "ip/prefix", // Test specific ip/prefix using RDAP
     output: "result.csv", // Output file (default: "result.csv")
-    downloadTimeout: 5 // Interrupt downloading a geofeed file after seconds (default: 10)
+    downloadTimeout: 5, // Interrupt downloading a geofeed file after seconds (default: 10)
+    customFeedsFile: "/path/to/custom-feeds.txt", // Additional geofeed URLs (one per line)
+    disableProcessing: true | false // Download geofeed files but skip processing and validation
 };
 
 new GeofeedFinder(options) // The options dict is optional, you can just do new GeofeedFinder()
@@ -138,6 +142,5 @@ new GeofeedFinder(options) // The options dict is optional, you can just do new 
         // An array of objects { prefix, country, region, city }
     });
 ```
-
 
 

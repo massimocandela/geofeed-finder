@@ -16,7 +16,8 @@ export default class CsvParser {
 
                 if (!!prefix) {
                     try {
-                        const geofeed = new Geofeed(inetnum, prefix, country, region, city, zip);
+                        const baseInetnum = inetnum || prefix;
+                        const geofeed = new Geofeed(baseInetnum, prefix, country, region, city, zip);
 
                         out.push(geofeed);
                     } catch (e) {

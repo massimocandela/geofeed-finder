@@ -93,6 +93,14 @@ const params = yargs
             .nargs("d", 1)
             .describe("d", "Interrupt downloading a geofeed file after seconds")
 
+            .alias("f", "custom-feeds")
+            .nargs("f", 1)
+            .describe("f", "Path to a file with additional geofeed URLs (one per line)")
+
+            .alias("x", "disable-processing")
+            .nargs("x", 0)
+            .describe("x", "Download geofeed files but skip processing and validation")
+
             .alias("i", "include")
             .nargs("i", 1)
             .default("i", "ripe,apnic,lacnic,afrinic,arin")
@@ -118,6 +126,8 @@ const options = {
     keepNonIso: !!params.k,
     keepInvalidSubdivisions: !!params.u,
     removeInvalidSubdivisions: !!params.r,
+    disableProcessing: !!params.x,
+    customFeedsFile: params.f || null,
     include: (params.i ?? "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
@@ -152,7 +162,9 @@ new Finder(options)
                     out.end();
 
                     out.on("finish", () => {
-                        console.log(`Done! See ${options.output}`);
+                        if (!options.disableProcessing) {
+                            console.log(`Done! See ${options.output}`);
+                        }
                         resolve();
                     });
 

@@ -23,6 +23,8 @@ export default class Finder {
             keepNonIso: false,
             keepInvalidSubdivisions: false,
             removeInvalidSubdivisions: false,
+            disableProcessing: false,
+            customFeedsFile: null,
             include: ["ripe", "afrinic", "apnic", "arin", "lacnic"],
             output: "result.csv",
             test: null,
@@ -133,6 +135,36 @@ export default class Finder {
         console.log(`${file} ${cache ? "[cache]" : "[download]"}`);
     };
 
+    _getCustomGeofeedUrls = () => {
+        if (!this.params.customFeedsFile) {
+            return [];
+        }
+
+        if (!fs.existsSync(this.params.customFeedsFile)) {
+            const message = `Error: custom feeds file not found: ${this.params.customFeedsFile}`;
+            this.logger.log(message);
+            console.log(message);
+            return [];
+        }
+
+        try {
+            const content = fs.readFileSync(this.params.customFeedsFile, "utf8");
+            const urls = content
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => !!line && !line.startsWith("#"))
+                .map(line => this.matchGeofeedFile(line)?.[0])
+                .filter(Boolean);
+
+            return [...new Set(urls)];
+        } catch (error) {
+            const message = `Error: cannot read custom feeds file ${this.params.customFeedsFile} (${error?.message ?? "Unknown error"})`;
+            this.logger.log(message);
+            console.log(message);
+            return [];
+        }
+    };
+
     _getGeofeedFile = (file) => {
 
         const abortTimeout = parseInt(this.params.downloadTimeout) * 1000;
@@ -195,7 +227,8 @@ export default class Finder {
 
     getGeofeedsFiles = (blocks) => {
         const out = [];
-        const uniqueBlocks = [...new Set(blocks.map(i => i.geofeed))];
+        const customGeofeeds = this._getCustomGeofeedUrls();
+        const uniqueBlocks = [...new Set([...blocks.map(i => i.geofeed), ...customGeofeeds])];
         const half = Math.floor(uniqueBlocks.length / 2);
 
         // pre load all files
@@ -204,6 +237,10 @@ export default class Finder {
             batchPromises(10, uniqueBlocks.slice(half), file => this._getGeofeedFile(file))
         ])
             .then(() => {
+                if (this.params.disableProcessing) {
+                    console.log("All files downloaded. Processing disabled.");
+                    return [];
+                }
 
                 console.log("All files downloaded. Processing files.");
 
@@ -215,6 +252,20 @@ export default class Finder {
 
                         if (data && data.length) {
                             out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
+                        }
+                    } catch (error) {
+                        // Nothing - these are files that are not CSV
+                    }
+                }
+
+                for (let file of customGeofeeds) {
+                    const cachedFile = this._getFileName(file);
+
+                    try {
+                        const data = fs.readFileSync(cachedFile, "utf8");
+
+                        if (data && data.length) {
+                            out.push(this.validateGeofeeds(this.csvParser.parse(null, data)));
                         }
                     } catch (error) {
                         // Nothing - these are files that are not CSV
@@ -425,6 +476,9 @@ export default class Finder {
             .then(this.getGeofeedsFiles)
             .then(data => {
                 this._persistCacheIndex();
+                if (this.params.disableProcessing) {
+                    return [];
+                }
                 return this.params.test ? data : this.setGeofeedPriority(data);
             });
     };
