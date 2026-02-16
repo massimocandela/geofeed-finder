@@ -96,7 +96,7 @@ const params = yargs
 
             .alias("x", "non-strict")
             .nargs("x", 0)
-            .describe("l", "Accept malformed remarks")
+            .describe("x", "Accept malformed remarks")
 
             .alias("i", "include")
             .nargs("i", 1)
