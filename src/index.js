@@ -18,6 +18,7 @@ const logger = new FileLogger({
     format: ({data, timestamp}) => `${timestamp} ${data}`
 });
 
+const epilog = `Copyright (c) 2020-${new Date().getFullYear()}, Massimo Candela (https://massimocandela.com)`;
 
 const params = yargs
     .usage("Usage: $0 <command> [options]")
@@ -93,6 +94,10 @@ const params = yargs
             .nargs("d", 1)
             .describe("d", "Interrupt downloading a geofeed file after seconds")
 
+            .alias("x", "non-strict")
+            .nargs("x", 0)
+            .describe("l", "Accept malformed remarks")
+
             .alias("i", "include")
             .nargs("i", 1)
             .default("i", "ripe,apnic,lacnic,afrinic,arin")
@@ -100,7 +105,7 @@ const params = yargs
     })
     .help("h")
     .alias("h", "help")
-    .epilog("Copyright (c) 2020, Massimo Candela")
+    .epilog(epilog)
     .argv;
 
 const options = {
@@ -121,8 +126,12 @@ const options = {
     include: (params.i ?? "ripe,apnic,lacnic,afrinic,arin").split(","),
     output: params.o || "result.csv",
     test: params.t || null,
+    strictGeofeedRemarks: !params.x,
+    exitOnError: true,
     downloadTimeout: params.d || 10 // 0 is not a valid value
 };
+
+console.log(`geofeed-finder - ${epilog}`);
 
 new Finder(options)
     .getGeofeeds()

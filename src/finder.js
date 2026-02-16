@@ -64,8 +64,12 @@ export default class Finder {
             return true;
         }
 
+        const remarkCheckCall = this.params.strictGeofeedRemarks
+            ? this.testGeofeedRemarkStrict
+            : this.testGeofeedRemark;
+
         if (inetnum?.remarks?.length > 0) {
-            return inetnum.remarks.some(this.testGeofeedRemark);
+            return inetnum.remarks.some(remarkCheckCall);
         }
 
         return false;
@@ -303,7 +307,7 @@ export default class Finder {
     };
 
     testGeofeedRemark = (remark) => {
-        return /^Geofeed:?\s+https?:\/\/\S+/gi.test(remark);
+        return /^Geofeed:?\s*https?:\/\/\S+/gi.test(remark);
     };
 
     testGeofeedRemarkStrict = (remark) => {
@@ -356,11 +360,14 @@ export default class Finder {
                     throw new Error("The input must be an IP or a prefix");
                 }
 
+                console.log(`Testing prefix ${prefix}`);
+
                 const index = {};
 
                 return Promise.all([
                     lessSpecific({flag: "h", query: prefix}, (data) => {
                         const flat = data.map(i => i.data).flat().flat().flat();
+
                         const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
                         const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()));
                         return [...geofeedAttributes, ...remarks].length > 0;
@@ -370,6 +377,7 @@ export default class Finder {
                 ])
                     .then(answers => answers.flat())
                     .then(answers => {
+
 
                         const items = answers.filter(i => i.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase())) && (i.find(i => i.key === "geofeed") || i.find(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark))));
 
@@ -389,8 +397,10 @@ export default class Finder {
                             if (geofeed) {
                                 const strict = !remarks || this.testGeofeedRemarkStrict(remarks);
 
-                                if (!strict) {
-                                    console.log(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space. Current remarks: ${strict}`);
+                                if (!strict && this.params.exitOnError) {
+                                    console.error(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
+                                    console.error(`Current remarks: ${remarks}`);
+                                    process.exit(1);
                                 }
 
                                 inetnums.forEach(inetnum => {
