@@ -7,7 +7,7 @@ import md5 from "md5";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
-import {explicitTransferCheck, lessSpecific} from "whois-wrapper";
+import {explicitTransferCheck, lessSpecific, prefixLookup} from "whois-wrapper";
 
 require("events").EventEmitter.defaultMaxListeners = 200;
 
@@ -351,6 +351,54 @@ export default class Finder {
             });
     };
 
+    _basicFilterFunction = (data) => {
+        const flat = data.map(i => i.data).flat().flat().flat();
+
+        const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
+        const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark));
+
+        return [...geofeedAttributes, ...remarks].length > 0;
+    };
+
+    _simplePrefixLookup = (prefix) => {
+        return prefixLookup({query: prefix})
+            .then(data => {
+                if (this._basicFilterFunction(data)) {
+                    return data.map(i => i.data).flat();
+                } else {
+                    return Promise.reject("No geofeed found");
+                }
+            });
+    };
+
+    _transferCheck = (prefix) => {
+        return explicitTransferCheck({query: prefix})
+            .then(data => {
+                if (this._basicFilterFunction(data)) {
+                    return data.map(i => i.data).flat();
+                } else {
+                    return Promise.reject("No geofeed found");
+                }
+            });
+    };
+
+    _bruteForceLessSpecific = (prefix) => {
+        return lessSpecific({query: prefix}, this._basicFilterFunction, 20)
+            .then(data => {
+                if (this._basicFilterFunction(data)) {
+                    return data.map(i => i.data).flat();
+                } else {
+                    return Promise.reject("No geofeed found");
+                }
+            });
+    };
+
+    _sequentialAttempts = (prefix) => {
+        return this._simplePrefixLookup(prefix)
+            .catch(() => this._transferCheck(prefix))
+            // .catch(() => this._bruteForceLessSpecific(prefix));
+    };
+
     getGeofeedInetnumPairs = () => {
         try {
             if (this.params.test) {
@@ -364,21 +412,8 @@ export default class Finder {
 
                 const index = {};
 
-                return Promise.all([
-                    lessSpecific({flag: "h", query: prefix}, (data) => {
-                        const flat = data.map(i => i.data).flat().flat().flat();
-
-                        const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
-                        const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()));
-                        return [...geofeedAttributes, ...remarks].length > 0;
-                    }, 12)
-                        .then(data => data.map(i => i.data).flat()),
-                    explicitTransferCheck({flag: "h", query: prefix}).then(data => data.flat().map(i => i?.data).filter(i => !!i).flat())
-                ])
-                    .then(answers => answers.flat())
+                return this._sequentialAttempts(prefix)
                     .then(answers => {
-
-
                         const items = answers.filter(i => i.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase())) && (i.find(i => i.key === "geofeed") || i.find(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark))));
 
                         const rangeToPrefix = (inetnum) => {
