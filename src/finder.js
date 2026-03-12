@@ -352,7 +352,7 @@ export default class Finder {
     };
 
     _basicFilterFunction = (data) => {
-        const flat = data.map(i => i.data).flat().flat().flat();
+        const flat = data.map(i => i.data).flat().flat().flat().filter(i => !!i);
 
         const geofeedAttributes = flat.filter(i => i.key.toLowerCase() === "geofeed");
         const remarks = flat.filter(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark));
@@ -396,6 +396,7 @@ export default class Finder {
     _sequentialAttempts = (prefix) => {
         return this._simplePrefixLookup(prefix)
             .catch(() => this._transferCheck(prefix))
+            .catch(() => []);
             // .catch(() => this._bruteForceLessSpecific(prefix));
     };
 
