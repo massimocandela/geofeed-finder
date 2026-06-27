@@ -43,7 +43,7 @@
     "@babel/preset-env": "^7.29.7",
     "dotenv-cli": "^11.0.0",
     "@yao-pkg/pkg": "^6.20.0",
-    "release-it": "^20.2.0"
+    "release-it": "^20.2.1"
   },
   "dependencies": {
     "batch-promises": "0.0.3",
