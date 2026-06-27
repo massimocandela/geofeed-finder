@@ -29,7 +29,8 @@ export default class Finder {
             downloadTimeout: 14,
             daysWhoisSuballocationsCache: 7, // Cannot be less than this
             skipSuballocations: false,
-            compileSuballocationLocally: false
+            compileSuballocationLocally: false,
+            downloadBatchSize: 10,
         };
         this.params = {
             ...defaults,
@@ -204,8 +205,8 @@ export default class Finder {
 
         // pre load all files
         return Promise.all([
-            batchPromises(10, uniqueBlocks.slice(0, half), file => this._getGeofeedFile(file)),
-            batchPromises(10, uniqueBlocks.slice(half), file => this._getGeofeedFile(file))
+            batchPromises(this.params.downloadBatchSize, uniqueBlocks.slice(0, half), file => this._getGeofeedFile(file)),
+            batchPromises(this.params.downloadBatchSize, uniqueBlocks.slice(half), file => this._getGeofeedFile(file))
         ])
             .then(() => {
 
