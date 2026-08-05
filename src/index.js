@@ -128,7 +128,7 @@ const options = {
     test: params.t || null,
     strictGeofeedRemarks: !params.x,
     exitOnError: true,
-    downloadTimeout: params.d || 10 // 0 is not a valid value
+    downloadTimeout: params.d || 20 // 0 is not a valid value
 };
 
 console.log(`geofeed-finder - ${epilog}`);
