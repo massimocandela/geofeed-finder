@@ -30,7 +30,7 @@ export default class Finder {
             daysWhoisSuballocationsCache: 7, // Cannot be less than this
             skipSuballocations: false,
             compileSuballocationLocally: false,
-            downloadBatchSize: 10,
+            downloadBatchSize: 10
         };
         this.params = {
             ...defaults,
@@ -168,29 +168,38 @@ export default class Finder {
 
                 this.logEntry(file, false);
 
-                axios({
-                    url: file,
-                    method: "GET",
-                    timeout: abortTimeout
-                })
-                    .then(response => {
-                        const data = response.data;
-                        if (/<a|<div|<span|<style|<link/gi.test(data)) {
-                            const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
-                            this.logger.log(message);
-                            console.log(message);
-                            resolveAndClear(null);
-                        } else {
-                            fs.writeFileSync(cachedFile, data);
-                            this._setGeofeedCacheHeaders(response, cachedFile);
-
-                            resolveAndClear();
-                        }
+                const attemptDownload = (attemptsLeft) => {
+                    axios({
+                        url: file,
+                        method: "GET",
+                        timeout: abortTimeout
                     })
-                    .catch(error => {
-                        this.logger.log(`Error: ${file} ${error?.message ?? "Unknown error"}`);
-                        resolveAndClear();
-                    });
+                        .then(response => {
+                            const data = response.data;
+                            if (/<a|<div|<span|<style|<link/gi.test(data)) {
+                                const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
+                                this.logger.log(message);
+                                console.log(message);
+                                resolveAndClear(null);
+                            } else {
+                                fs.writeFileSync(cachedFile, data);
+                                this._setGeofeedCacheHeaders(response, cachedFile);
+
+                                resolveAndClear();
+                            }
+                        })
+                        .catch(error => {
+                            if (attemptsLeft > 0) {
+                                this.logger.log(`Warning: ${file} ${error?.message ?? "Unknown error"}, retrying...`);
+                                attemptDownload(attemptsLeft - 1);
+                            } else {
+                                this.logger.log(`Error: ${file} ${error?.message ?? "Unknown error"}`);
+                                resolveAndClear();
+                            }
+                        });
+                };
+
+                attemptDownload(1);
             }
         })
             .then(() => {}) // Avoid empty logs
@@ -398,7 +407,7 @@ export default class Finder {
         return this._simplePrefixLookup(prefix)
             .catch(() => this._transferCheck(prefix))
             .catch(() => []);
-            // .catch(() => this._bruteForceLessSpecific(prefix));
+        // .catch(() => this._bruteForceLessSpecific(prefix));
     };
 
     getGeofeedInetnumPairs = () => {
@@ -424,6 +433,7 @@ export default class Finder {
                                 : [inetnum];
                         };
 
+
                         for (let item of items) {
                             const inetnums = rangeToPrefix(item.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase()))?.value);
                             const geofeedAttributes = item.find(i => i.key === "geofeed")?.value;
@@ -431,8 +441,12 @@ export default class Finder {
 
                             const geofeed = this.matchGeofeedFile(geofeedAttributes ?? remarks)?.[0];
 
+
+                            console.log(geofeed);
                             if (geofeed) {
                                 const strict = !remarks || this.testGeofeedRemarkStrict(remarks);
+
+                                console.log(strict);
 
                                 if (!strict && this.params.exitOnError) {
                                     console.error(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
