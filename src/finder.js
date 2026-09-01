@@ -441,12 +441,8 @@ export default class Finder {
 
                             const geofeed = this.matchGeofeedFile(geofeedAttributes ?? remarks)?.[0];
 
-
-                            console.log(geofeed);
                             if (geofeed) {
                                 const strict = !remarks || this.testGeofeedRemarkStrict(remarks);
-
-                                console.log(strict);
 
                                 if (!strict && this.params.exitOnError) {
                                     console.error(`Error: the remark MUST be in the format: Geofeed https://url/file.csv. Uppercase G, no colon, no quotes, and one space.`);
