@@ -369,8 +369,8 @@ export default class Finder {
         return [...geofeedAttributes, ...remarks].length > 0;
     };
 
-    _simplePrefixLookup = (prefix) => {
-        return prefixLookup({query: prefix})
+    _simplePrefixLookup = (prefix, rir) => {
+        return prefixLookup({query: prefix, ...rir ? {servers: [`whois.${rir}.net`]} : {}})
             .then(data => {
                 if (this._basicFilterFunction(data)) {
                     return data.map(i => i.data).flat();
@@ -380,8 +380,8 @@ export default class Finder {
             });
     };
 
-    _transferCheck = (prefix) => {
-        return explicitTransferCheck({query: prefix})
+    _transferCheck = (prefix, rir) => {
+        return explicitTransferCheck({query: prefix, ...rir ? {servers: [`whois.${rir}.net`]} : {}})
             .then(data => {
                 if (this._basicFilterFunction(data)) {
                     return data.map(i => i.data).flat();
@@ -402,15 +402,19 @@ export default class Finder {
             });
     };
 
-    _sequentialAttempts = (prefix) => {
-        return this._simplePrefixLookup(prefix)
-            .catch(() => this._transferCheck(prefix))
+    _sequentialAttempts = (prefix, rir) => {
+        return this._simplePrefixLookup(prefix, rir)
+            .catch(() => this._transferCheck(prefix, rir))
             .catch(() => []);
         // .catch(() => this._bruteForceLessSpecific(prefix));
     };
 
-    getGeofeedInetnumPairs = () => {
+    getGeofeedInetnumPairs = (rir) => {
         try {
+            if (rir && !this.params.include.includes(rir)) {
+                throw new Error(`RIR ${rir} is not included in the list of allowed RIRs`);
+            }
+
             if (this.params.test) {
                 const prefix = ipUtils.toPrefix(this.params.test.toString().trim());
 
@@ -422,7 +426,7 @@ export default class Finder {
 
                 const index = {};
 
-                return this._sequentialAttempts(prefix)
+                return this._sequentialAttempts(prefix, rir)
                     .then(answers => {
                         const items = answers.filter(i => i.find(i => ["inetnum", "inet6num", "netrange"].includes(i.key.toLowerCase())) && (i.find(i => i.key === "geofeed") || i.find(i => ["remarks", "comment"].includes(i.key.toLowerCase()) && i.value?.some(this.testGeofeedRemark))));
 
