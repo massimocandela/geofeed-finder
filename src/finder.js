@@ -3,7 +3,7 @@ import axios from "redaxios";
 import WhoisParser from "bulk-whois-parser";
 import LongestPrefixMatch from "longest-prefix-match";
 import CsvParser from "./csvParser";
-import md5 from "md5";
+import {createHash} from "crypto";
 import fs from "fs";
 import moment from "moment";
 import ipUtils from "ip-sub";
@@ -88,7 +88,7 @@ export default class Finder {
     };
 
     _getFileName = (file) => {
-        return this.cacheDir + md5(file);
+        return this.cacheDir + createHash("sha256").update(file).digest("hex");
     };
 
     _setGeofeedCacheHeaders = (response, cachedFile) => {
