@@ -30,7 +30,8 @@ export default class Finder {
             daysWhoisSuballocationsCache: 7, // Cannot be less than this
             skipSuballocations: false,
             compileSuballocationLocally: false,
-            downloadBatchSize: 10
+            downloadBatchSize: 10,
+            disableFileCacheDuringTests: true
         };
         this.params = {
             ...defaults,
@@ -105,11 +106,11 @@ export default class Finder {
             setAge = Math.min(Math.max(parseInt(age), 3600), 3600 * 24 * 7); //  Min 1 hour, max 1 week of cache (to avoid random max-age settings)
         }
 
-        this.cacheHeadersIndex[cachedFile] = this.cacheHeadersIndex[cachedFile] ?? moment(this.startTime).add(setAge, "seconds");
+        this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(setAge, "seconds");
     };
 
     _isCachedGeofeedValid = (cachedFile) => {
-        if (this.params.test) {
+        if (this.params.disableFileCacheDuringTests && this.params.test) {
             return false;
         } else {
             return fs.existsSync(cachedFile) &&
@@ -148,8 +149,8 @@ export default class Finder {
                 resolve(null);
             }, abortTimeout);
 
-            const resolveAndClear = (data) => {
-                resolve(data);
+            const resolveAndClear = () => {
+                resolve();
                 clearTimeout(timeout);
             };
 
@@ -179,14 +180,12 @@ export default class Finder {
                             if (/<a|<div|<span|<style|<link/gi.test(data)) {
                                 const message = `Error: ${file} is not CSV but HTML, stop with this nonsense!`;
                                 this.logger.log(message);
-                                console.log(message);
-                                resolveAndClear(null);
                             } else {
                                 fs.writeFileSync(cachedFile, data);
                                 this._setGeofeedCacheHeaders(response, cachedFile);
-
-                                resolveAndClear();
                             }
+
+                            resolveAndClear();
                         })
                         .catch(error => {
                             if (attemptsLeft > 0) {
