@@ -220,6 +220,7 @@ export default class Finder {
 
                 console.log("All files downloaded. Processing files.");
 
+                this._persistCacheIndex();
                 for (let block of blocks) {
                     const cachedFile = this._getFileName(block.geofeed);
 
@@ -484,7 +485,6 @@ export default class Finder {
         return this.getGeofeedInetnumPairs()
             .then(this.getGeofeedsFiles)
             .then(data => {
-                this._persistCacheIndex();
                 return this.params.test ? data : this.setGeofeedPriority(data);
             });
     };
