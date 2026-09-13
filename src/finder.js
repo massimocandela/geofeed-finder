@@ -103,7 +103,9 @@ export default class Finder {
 
             let age = maxAge?.split("=")?.pop() ?? 0;
             age = isNaN(age) ? 0 : age;
-            setAge = Math.min(Math.max(parseInt(age), 3600), 3600 * 24 * 7); //  Min 1 hour, max 1 week of cache (to avoid random max-age settings)
+            const oneHour = 3600;
+            const oneWeek = oneHour * 24 * 7;
+            setAge = Math.min(Math.max(parseInt(age), oneHour), oneWeek); //  Min 1 hour, max 1 week of cache (to avoid random max-age settings)
         }
 
         this.cacheHeadersIndex[cachedFile] = moment(this.startTime).add(setAge, "seconds");
@@ -224,18 +226,17 @@ export default class Finder {
 
                 for (let uniqueBlock of uniqueBlocks) {
                     const cachedFile = this._getFileName(uniqueBlock);
-                    const data = fs.readFileSync(cachedFile, "utf8");
-                    if (data && data.length) {
+                    try {
+                        const data = fs.readFileSync(cachedFile, "utf8");
 
-                        for (let block of blocks.filter(i => i.geofeed === uniqueBlock)) {
+                        if (data && data?.length) {
 
-                            try {
+                            for (let block of blocks.filter(i => i.geofeed === uniqueBlock)) {
                                 out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
-                            } catch (error) {
-                                // Nothing - these are files that are not CSV
                             }
-
                         }
+                    } catch (error) {
+                        // Nothing - these are files that are not CSV
                     }
                 }
 
