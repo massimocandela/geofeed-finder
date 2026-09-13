@@ -221,17 +221,21 @@ export default class Finder {
                 console.log("All files downloaded. Processing files.");
 
                 this._persistCacheIndex();
-                for (let block of blocks) {
-                    const cachedFile = this._getFileName(block.geofeed);
 
-                    try {
-                        const data = fs.readFileSync(cachedFile, "utf8");
+                for (let uniqueBlock of uniqueBlocks) {
+                    const cachedFile = this._getFileName(uniqueBlock);
+                    const data = fs.readFileSync(cachedFile, "utf8");
+                    if (data && data.length) {
 
-                        if (data && data.length) {
-                            out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
+                        for (let block of blocks.filter(i => i.geofeed === uniqueBlock)) {
+
+                            try {
+                                out.push(this.validateGeofeeds(this.csvParser.parse(block.inetnum, data)));
+                            } catch (error) {
+                                // Nothing - these are files that are not CSV
+                            }
+
                         }
-                    } catch (error) {
-                        // Nothing - these are files that are not CSV
                     }
                 }
 
